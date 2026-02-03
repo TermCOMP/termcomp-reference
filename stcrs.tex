@@ -1,0 +1,734 @@
+\documentclass{lmcs}
+\pdfoutput=1
+
+\usepackage{enumerate}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{amssymb}
+\usepackage{xcolor,latexsym,amsmath,extarrows,alltt}
+\usepackage{xspace}
+\usepackage{booktabs}
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{stmaryrd}
+\usepackage{microtype}
+
+\theoremstyle{theorem}\newtheorem{theorem}{Theorem}
+\theoremstyle{theorem}\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{theorem}\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{definition}\newtheorem{example}[theorem]{Example}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\Vmeta}{\mathcal{M}}
+\newcommand{\Vfree}{\mathcal{V}_{\mathit{nonb}}}
+\newcommand{\Vbound}{\mathcal{V}}
+\newcommand{\Sorts}{\mathcal{S}}
+\newcommand{\Types}{\mathcal{T}\!ypes}
+\newcommand{\Terms}{\mathcal{T}}
+\newcommand{\ATerms}{\mathcal{T}_{\mathcal{A}}}
+\newcommand{\FOTerms}{\mathcal{T}_{\mathcal{FO}}}
+\newcommand{\Rules}{\mathcal{R}}
+\newcommand{\FV}{\mathit{FV}}
+\newcommand{\FMV}{\mathit{MVar}}
+\newcommand{\Positions}{\mathit{Positions}}
+\newcommand{\SubPositions}{\mathit{SubPositions}}
+\newcommand{\HeadPositions}{\mathit{HeadPositions}}
+\newcommand{\Pairs}{\mathit{Pairs}}
+
+\newcommand{\domain}{\mathtt{domain}}
+\newcommand{\order}{\mathit{order}}
+
+\newcommand{\asort}{\iota}
+\newcommand{\bsort}{\kappa}
+\newcommand{\atype}{\sigma}
+\newcommand{\btype}{\tau}
+\newcommand{\ctype}{\pi}
+\newcommand{\dtype}{\alpha}
+\newcommand{\identifier}[1]{\mathtt{#1}}
+\newcommand{\afun}{\identifier{f}}
+\newcommand{\bfun}{\identifier{g}}
+\newcommand{\cfun}{\identifier{h}}
+\newcommand{\avar}{x}
+\newcommand{\bvar}{y}
+\newcommand{\cvar}{z}
+\newcommand{\Avar}{X}
+\newcommand{\Bvar}{Y}
+\newcommand{\Cvar}{Z}
+\newcommand{\AFvar}{F}
+\newcommand{\BFvar}{G}
+\newcommand{\CFvar}{H}
+\newcommand{\typeof}{\mathsf{typeof}}
+
+\newcommand{\clause}[1]{\textbf{#1}}
+\newcommand{\hastype}{\ \mathtt{::}\ }
+
+\newcommand{\abs}[3]{\lambda #1\!:\!#2.#3}
+\newcommand{\app}[2]{#1 \cdot #2}
+\newcommand{\apps}[3]{#1 \cdot #2 \cdots #3}
+\newcommand{\metaabs}[2]{\langle #1\rangle#2}
+\newcommand{\metaabsn}[4]{\metaabs{#1_1\!:\!#2_1,\dots,#1_n\!:\!#2_{#3}}{#4}}
+\newcommand{\metaabslist}[3]{\langle #1_1\!:\!#2_1,\dots,#1_n\!:\!#2_{#3} \rangle}
+
+\newcommand{\arity}{\mathit{ar}}
+\newcommand{\head}{\mathsf{head}}
+\newcommand{\arrtype}{\rightarrow}
+\newcommand{\arrz}{\Rightarrow}
+\newcommand{\arr}[1]{\arrz_{#1}}
+\newcommand{\arrr}[1]{\arr{#1}^*}
+\newcommand{\subtermeq}{\unlhd}
+\newcommand{\headsubtermeq}{\unlhd_{\bullet}}
+\newcommand{\supterm}{\rhd}
+\newcommand{\suptermeq}{\unrhd}
+\newcommand{\replace}[3]{#1_{#2:=#3}}
+
+\newcommand{\symb}[1]{\mathtt{#1}}
+
+\newcommand{\nul}{\symb{0}}
+\newcommand{\one}{\symb{1}}
+\newcommand{\nil}{\symb{nil}}
+\newcommand{\cons}{\symb{cons}}
+\newcommand{\strue}{\symb{true}}
+\newcommand{\sfalse}{\symb{false}}
+\newcommand{\append}{\symb{append}}
+\newcommand{\suc}{\symb{s}}
+\newcommand{\map}{\symb{map}}
+\newcommand{\bool}{\symb{bool}}
+\newcommand{\nat}{\symb{nat}}
+\newcommand{\real}{\symb{real}}
+\newcommand{\lijst}{\symb{list}}
+\newcommand{\unitsort}{\mathtt{o}}
+
+\newcommand{\cora}{\textsf{CORA}\xspace}
+
+\newcommand{\secshort}{\S}
+\newcommand{\myparagraph}[1]{\paragraph{\textbf{#1}}}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{\bigskipamount}
+\setlist[itemize]{topsep=-\bigskipamount}
+
+\newcommand{\mysubsection}[1]{\vspace{-12pt}\subsubsection{#1}}
+
+\begin{document}
+
+\title{Higher-order rewriting (union beta)}
+
+\maketitle
+
+\begin{abstract}
+The following pages describe the syntax and semantics of the higher-order ARI formalism.
+This format is simply-typed (without formalism) and in principle curried.  Matching is
+\emph{mostly} plain, though a limited form of higher-order matching modulo beta is
+included for pattrens.
+\end{abstract}
+
+\section{Syntax}
+
+\subsection{Grammar}
+\ 
+
+\begin{tabular}{lll}
+trs & ::= & \texttt{(format higher-order)} sort+ fun+ hrule+ \\
+sort & ::= & \texttt{(sort} IDENTIFIER\texttt{)} \\
+fun & ::= & \texttt{(fun} IDENTIFIER type\texttt{)} \\
+type & ::= & IDENTIFIER $|$ \texttt{(-}$\mathtt{>}$ type+ IDENTIFIER\texttt{)} \\
+term & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER term+\texttt{)} $|$ \texttt{(}\texttt{lambda} \texttt{(}var+\texttt{)} term\texttt{)} \\
+var & ::= & \texttt{(}IDENTIFIER type\texttt{)} \\
+rule & ::= & \texttt{(rule} term term\texttt{)} \\
+\end{tabular}
+
+\subsection{Restrictions}
+
+\begin{itemize}
+\item The left- and right-hand sides of rules must have the same type.
+\item All unbound variables in the right-hand side must occur in the left-hand side.
+\item The left-hand side has the form \texttt{f} or (\texttt{f} l1 ... ln) with f a function symbol.
+\item The left-hand side must be a \textbf{pattern}, i.e., the arguments of every applied free variable are distinct bound variables.
+\item If any variable occurs applied on the left, then each occurrence in the left-hand side must have exactly the same number of
+  arguments, and each occurrence on the right must have \emph{at least} that number of arguments.
+\end{itemize}
+
+\section{Semantics}
+
+\subsection{Types}
+
+We use simple types, i.e., fixing a set $\Sorts$ of sorts, the types $\Types$ of \emph{types} is generated inductively by:
+
+\[ \Types ::= \Sorts\, |\, \Types \arrtype \Types \]
+
+The arrow operator $\arrtype$ is right-associative, so all types can be denoted in a form
+$\atype_1 \arrtype \dots \arrtype \atype_m \arrtype \asort$ with $\asort \in \Sorts$.
+In ARI format, such a type is denoted $\mathtt{(-\!\!>\ \sigma_1\ \dots\ \sigma_n\ \asort)}$.
+
+\subsection{Terms}
+
+We fix a set $\F$ of \emph{function symbols}, also called the \emph{alphabet}; each function
+symbol is equipped with a type.  Notation: $(\afun \hastype \atype) \in \F$, where $\afun$ is
+the name and $\atype$ the type.  We also fix an infinite set $\V$ of \emph{variables}, disjoint
+from the names used in $\F$.
+
+A \emph{type environment} is a function $\Gamma$ from a subset of $\V$ to $\Types$.
+(That is, it is a set of pairs $(\avar \hastype \atype)$ such that no $\avar$ occurs more than
+once.)
+
+\emph{Terms} are those expressions $s$ such that $\Gamma \vdash s \hastype \atype$ can be derived
+for some type environment $\Gamma$ using the following clauses:
+
+\begin{description}
+\item[constant] if $(\afun \hastype \atype) \in \F$ then $\Gamma \vdash \afun \hastype \atype$
+\item[variable] if $(\avar \hastype \atype) \in \Gamma$ then $\Gamma \vdash \avar \hastype \atype$
+\item[application] if $\Gamma \vdash s \hastype \atype \arrtype \btype$ and
+  $\Gamma \vdash t \hastype \atype$ then $\Gamma \vdash \app{s}{t} :: \btype$
+\item[abstraction] if $\avar \in \V$ and $\replace{\Gamma}{\avar}{\atype} \vdash t :: \btype$, then
+  $\Gamma \vdash \abs{\avar}{\atype}{t} :: \atype \arrtype \btype$ \\
+  (Here, $\replace{\Gamma}{\avar}{\atype}$ is the function that maps $\avar$ to $\atype$ and all other
+  variables $\bvar$ to $\Gamma(\bvar)$.)
+\end{description}
+
+The application operator $\cdot$ is left-associative, so every term can be written $h \cdot s_1
+\cdots s_n$ with $n \geq 0$, where $h$ is a function symbol, variable or abstraction.
+In ARI format, such a term is denoted $(h\ s_1 \cdots s_n)$.
+%The abstraction operator extends as far to the right as possible, so a term
+%$\abs{x}{\atype}{s \cdot t \cdot q}$ should be read as $\abs{x}{\atype}{((s \cdot t) \cdot q)}$.
+We also use $\lambda x_1\!:\!\sigma_1,\dots,x_n\!:\!\sigma_n.s$ to denote
+$\abs{x_1}{\sigma_1}{(\lambda \dots (\abs{x_n}{\sigma_n}{s})\dots)}$.  In ARI format, this is denoted
+$\mathtt{(lambda\ ((}x_1\ \sigma_1\mathtt{)} \dots \mathtt{(}x_n\ \sigma_n\mathtt{))}\ s\mathtt{)}$.
+
+Term equality is considered modulo $\alpha$-equivalence as usual (where variable renaming does not
+affect types, so for instance $\abs{\avar}{\atype}{\symb{0}} \neq \abs{\bvar}{\btype}{\symb{0}}$ if
+$\atype \neq \btype$).  Equality is \emph{not} considered modulo $\beta$ or $\eta$-equivalence, so
+for instance $\app{(\abs{\avar}{\nat}{(\app{\symb{s}}{\avar})})}{\symb{0}}$ is distinct from
+$\app{\symb{s}}{\symb{0}}$ (but \emph{is} equal to
+$\app{(\abs{\bvar}{\nat}{(\app{\symb{s}}{\bvar})})}{\symb{0}}$).
+
+We define the set $\FV(s)$ of free variables in $s$ as usual: the set of all variables occurring in
+$s$ which are not bound by a $\lambda$.
+
+When reasoning about terms, it is often useful to consider the ``maximally applied subterm''
+relation $\suptermeq$, defined as follows:
+\begin{itemize}
+\item $s \suptermeq t$ if $s = t$ or $s \supterm t$
+\item $\app{s}{u} \supterm t$ if $u \suptermeq t$ or $s \supterm t$
+\item $\abs{\avar}{\atype}{s} \supterm t$ if $u \suptermeq t$
+\end{itemize}
+Note that for instance $\app{\app{\afun}{s_1}}{s_2} \supterm s_i$ but \emph{not} $\app{\app{\afun}{
+s_1}}{s_2} \supterm \app{\afun}{s_1}$: subterms at the head of an application are deliberately not
+included.
+
+\subsection{Substitution and variable capture}
+
+For type environments $\Gamma,\Delta$, a \emph{substitution} is a type-preserving function from
+$\Gamma$ to the set of terms typable under $\Delta$.  Formally, we denote $\Gamma, \Delta \vdash
+\gamma$ if $\domain(\gamma) = \domain(\Gamma)$ and $\Delta \vdash \gamma(\avar) \hastype \atype$
+for every $(\avar \hastype \atype) \in \Gamma$.
+
+A substitution $\gamma$ is applied to a term $s$, notation $s\gamma$, by the following procedure:
+\begin{enumerate}
+\item rename all bound variables in $s$ to fresh variables, i.e., distinct variables that do not
+  occur in $\Gamma$ or $\Delta$
+\item replace each free variable $x$ by $\gamma(x)$
+\end{enumerate}
+
+Formally, if $\Gamma,\Delta \vdash \gamma$ and $\Gamma \vdash s \hastype \atype$ and all bound
+variables in $s$ have been renamed to be disjoint from each other and from the variables in
+$\Gamma$ and $\Delta$, then $s\gamma$ is obtained by the following clauses, yielding a term such
+that $\Delta \vdash s\gamma \hastype \atype$:
+
+\begin{itemize}
+\item $\afun\gamma = \afun$
+\item $\avar\gamma = \gamma(\avar)$ if $\avar \in \domain(\gamma)$
+\item $\avar\gamma = \avar$ if $\avar \notin \domain(\gamma)$
+\item $(\app{s}{t})\gamma = \app{(s\gamma)}{(t\gamma)}$
+%\item $(\abs{\avar}{\atype}{s})\gamma = \abs{\bvar}{\atype}{(s\replace{\gamma}{\avar}{\bvar})}$
+%  for $\bvar$ a \emph{fresh} variable, i.e., $\bvar$ does not occur in $\Gamma$ or $\Delta$.
+\item $(\abs{\avar}{\atype}{s})\gamma = \abs{\avar}{\atype}{(s\gamma)}$;
+  here, due to the $\alpha$-renaming beforehand, $\avar$ does not occur in $\domain(\gamma)$ or in
+  $\FV(\bvar\gamma)$ for any $\bvar \in \FV(s) \setminus \{\avar\}$
+\end{itemize}
+
+Note that substitution is preserved under $\alpha$-renaming, i.e., if $s =_\alpha t$, and $\delta$
+is a substitution on the same domain as $\gamma$ such that each $\gamma(\avar) =_\alpha
+\delta(\avar)$, then $s\gamma =_\alpha t\delta$.
+
+We denote $[\avar_1:=s_1,\dots,\avar_n:=s_n]$ for the substitution on domain $\{\avar_1,\dots,
+\avar_n\}$ that maps each $\avar_i$ to $s_i$.
+
+\begin{example}
+Regarding variable capture, consider the following two illustrative cases.
+
+\begin{itemize}
+\item $(\abs{\avar}{\atype}{(\app{\afun}{\avar})})[\avar:=\symb{a}] =
+  \abs{\cvar}{\atype}{(\app{\afun}{\cvar})} =_\alpha
+  \abs{\avar}{\atype}{(\app{\afun}{\avar})}$: \\
+  the bound variable $\avar$ is not replaced by $\symb{a}$, since it is bound
+  (and hence renamed before substituting)
+\item $(\abs{\avar}{\atype}{(\app{\afun}{\bvar})})[\bvar:=\avar] =
+  \abs{\cvar}{\atype}{(\app{\afun}{\avar})}$: \\
+  the binder is renamed, so the $\avar$ in the range of the substitution is not captured.
+\end{itemize}
+\end{example}
+
+\subsection{Rules}
+
+A \emph{rule} $\rho$ consists of two terms $\ell \arrz r$, such that a type environment
+$\Gamma$ exists with:
+
+\begin{itemize}
+\item both sides have the same type: both $\Gamma \vdash \ell \hastype \atype$ and $\Gamma \vdash
+  r \hastype \atype$ for some $\atype$ (but it is not required that $\atype$ is a sort)
+\item all variables on the right also occur on the left: $\FV(r) \subseteq \FV(\ell)$
+\item the left-hand side is a functional term: $\ell$ has a form $\apps{\afun}{\ell_1}{\ell_k}$
+  with $\afun \in \F$
+\item $\ell$ is a \emph{pattern}: if $\ell \suptermeq \apps{\avar}{s_1}{s_n}$ for some
+  $\avar \in \FV(\ell)$ then $s_1,\dots,s_n$ are distinct bound variables; that is,
+  $\{s_1,\dots,s_n\} \subseteq \V \setminus \FV(\ell)$ and $s_i \neq s_j$ for
+  $1 \leq i < j \leq n$
+\item free variables are used \emph{consistently}: there is a function $\arity$ from $\FV(\ell)$
+  to $\N$ such that:
+  \begin{itemize}
+  \item if $\ell \suptermeq \apps{\avar}{\bvar_1}{\bvar_n}$ with $\avar \in \FV(\ell)$ then
+    $\arity(\avar) = n$
+  \item if $r \suptermeq \apps{\avar}{s_1}{s_n}$ with $\avar \in \FV(\ell)$ then
+    $\arity(\avar) \leq n$
+  \end{itemize}
+\item both left- and right-hand sides are $\beta$-normal: neither has a subterm of the form
+  $\app{(\abs{\avar}{\atype}{s})}{t_0} \cdots t_n$
+\end{itemize}
+
+Note that $\Gamma$ is always uniquely defined by the restrictions on $\ell$.
+
+\begin{example}
+A valid rule where all variables have arity $0$ is:
+\[
+\app{\app{\symb{map}}{F}}{(\app{\app{\cons}{x}}{y})} \arrz
+\app{\app{\cons}{(\app{F}{x})}}{(\app{\app{\symb{map}}{F}}{y})}
+\]
+A valid rule where $F$ has arity $1$ is:
+\[
+\app{\app{\symb{map}}{(\abs{\cvar}{\nat}{(\app{F}{\cvar})})}}{(\app{\app{\cons}{x}}{y})} \arrz
+\app{\app{\cons}{(\app{F}{x})}}{(\app{\app{\symb{map}}{(\abs{\cvar}{\nat}{(\app{F}{\cvar})})}}{y})}
+\]
+Note that these rules model \emph{essentially} the same relation.  To keep the database clean, we
+advise submitting only examples using the shorter form where this is possible (that is, keeping
+variable arity as low as possible by eta-shortening variables), unless the choice of presentation
+is actively relevant for questions of termination or confluence.
+
+An example of an invalid rule is the following:
+\[
+\app{\symb{der}}{(\abs{\avar}{\real}{(\app{\app{\symb{plus}}{(\app{F}{\avar})}}{(\app{G}{\avar})})})}
+\arrz
+\abs{\avar}{\real}{\app{\app{\symb{plus}}{(\app{(\app{\symb{der}}{F})}{\avar})}}{(\app{(\app{\symb{der}}{G})}{\avar})}}
+\]
+This is not valid because in the right-hand side, both $F$ and $G$ occur with fewer arguments than
+they have in the left-hand side.  A corrected version of this rule has the same left-hand side, but
+the following right-hand side:
+\[
+\abs{\avar}{\real}{\app{\app{\symb{plus}}{
+    (\app{(\app{\symb{der}}{(\abs{\bvar}{\nat}{(\app{F}{\bvar})})})}{\avar})
+  }}{
+    (\app{(\app{\symb{der}}{(\abs{\bvar}{\nat}{(\app{F}{\bvar})})})}{\avar})
+  }}
+\]
+Note that in this rule, the left-hand side cannot be eta-shortened, so we could not avoid $F$ having
+arity $1$.
+\end{example}
+
+Due to the pattern restriction, the type of the free variables in a rule can always be deduced from
+context.  Hence, it suffices to give a rule without explicitly supplying $\Gamma$.
+
+\subsection{Rewriting}
+
+For a rule $\ell \arrz r$ with type environment $\Gamma$ and arity function $\arity$ from $\Gamma$
+to $\N$, a \emph{meta-substitution} to a target type environment $\Delta$ is defined as a function
+$\delta$ that maps each $\avar$ with $(\avar \hastype \atype) \in \Gamma$ and $\arity(\avar) = n$ to
+a construction $\metaabsn{\bvar}{\btype}{n}{t}$, where
+$\{\bvar_1,\dots,\bvar_n\} \in \V \setminus (\domain(\Gamma) \cup \domain(\Delta))$,
+all $\bvar_i$ are distinct, and $\Delta \cup \{\bvar_1 \hastype \btype_1,\dots,\bvar_n
+\hastype\btype_n\} \vdash t \hastype \atype$.
+
+A meta-substitution $\delta$ is applied to $s \in \{\ell,r\}$, notation $s\delta$, by the following
+procedure:
+\begin{enumerate}
+\item rename all bound variables that occur in $s$ to fresh variables, i.e., distinct variables
+  that do not occur in $\Gamma$, $\Delta$, or any of the argument lists $\metaabslist{\bvar}{
+  \btype}{n}$ in the range of $\delta$
+\item replace each occurrence of $\apps{\avar}{s_1}{s_n}$ in $s$ with $\avar \in \FV(s)$ and
+  $n = \arity(\avar)$ by $t[\bvar_1:=s_1\delta,\dots,\bvar_n:=s_n\delta]$ if
+  $\delta(\avar) = \metaabsn{\bvar}{\btype}{n}{t}$; formally, this is achieved by:
+  \begin{itemize}
+  \item $(\apps{\afun}{s_1}{s_m})\delta = \apps{\afun}{(s_1\delta)}{(s_m\delta)}$
+  \item $(\apps{\avar}{s_1}{s_m})\delta = \apps{\avar}{(s_1\delta)}{(s_m\delta)}$
+    if $\avar \notin \domain(\delta)$
+  \item $(\apps{\avar}{s_1}{s_n} \cdots s_m)\delta =
+    \apps{(t[\bvar_1:=s_1\delta,\dots,\bvar_n:=s_n\delta])}{(s_{n+1}\delta)}{(s_m\delta)}$
+    if $\delta(\avar) = \metaabsn{\bvar}{\btype}{n}{t}$ (by the arity restriction, we always
+    have $0 \leq n \leq m$)
+  \item $(\apps{(\abs{\avar}{\atype}{t})}{s_1}{s_n})\delta =
+    \apps{(\abs{\avar}{\atype}{(t\delta)})}{(s_1\delta)}{(s_n\delta)}$; \\
+    here, due to the $\alpha$-renaming beforehand, $x$ does not occur in $\domain(\delta)$ nor
+    anywhere in any $\delta(\bvar)$
+  \end{itemize}
+\end{enumerate}
+
+For a set of rules $\Rules$, the reduction relation on terms is defined by the following inductive
+clauses:
+\begin{itemize}
+\item $\ell\delta \arr{\Rules} r\delta$ if $\ell \arrz r \in \Rules$ is a rule with type
+  environment $\Gamma$ and arity function $\arity$, and $\delta$ is a meta-substitution on domain
+  $\Gamma$ that respects $\arity$
+\item $\app{(\abs{\avar}{\atype}{s})}{t} \arr{\Rules} s[\avar:=t]$ (the $\beta$-rule)
+\item $\app{s}{t} \arr{\Rules} \app{s'}{t}$ if $s \arr{\Rules} s'$
+\item $\app{s}{t'} \arr{\Rules} \app{s}{t'}$ if $t \arr{\Rules} t'$
+\item $\abs{\avar}{\atype}{s} \arr{\Rules} \abs{\avar}{\atype}{s'}$ if $s \arr{\Rules} s'$
+\end{itemize}
+
+Note in particular that $\beta$ is a separate rule; we do not work \emph{modulo} $\beta$ (despite
+the use of meta-substitutions for matching, which creates a somewhat similar effect).
+
+\begin{example}\label{ex:map}
+Suppose $\Rules$ contains a rule
+\[
+\app{\app{\symb{map}}{F}}{(\app{\app{\cons}{x}}{y})} \arrz
+\app{\app{\cons}{(\app{F}{x})}}{(\app{\app{\symb{map}}{F}}{y})}
+\]
+We have that $\app{\app{\symb{map}}{\textcolor{red}{(\app{\symb{plus}}{(\app{\suc}{\nul})})}}}{(\app{\app{\cons}{\textcolor{blue}{\nul}}}{\textcolor{green}{\nil}})}$
+reduces at the root to
+\[\app{\app{\cons}{(\app{\textcolor{red}{\app{\symb{plus}}{(\app{\suc}{\nul})}}}{\textcolor{blue}{\nul}})}}{(\app{\app{\symb{map}}{\textcolor{red}{(\app{\symb{plus}}{(\app{\suc}{\nul})})}}}{\textcolor{green}{\nil}})}\]
+using the meta-substitution $[F:=\metaabs{}{\textcolor{red}{\app{\symb{plus}}{(\app{\suc}{\nul})}}},x:=\metaabs{}{\textcolor{blue}{\nul}},t:=\metaabs{}{\textcolor{green}{\nil}]}$.
+
+Also, $\app{
+        \app{
+          \symb{map}
+        }{
+          \textcolor{red}{(\abs{\avar}{\nat}{
+            \app{\app{
+              \symb{plus}
+            }{
+              (\app{\suc}{\nul})
+            }}{
+              \avar
+            }
+          })}
+        }
+      }{
+        (\app{\app{\cons}{\textcolor{blue}{\nul}}}{\textcolor{green}{\nil}})
+      }$
+reduces at the root to
+\[
+  \app{
+    \app{
+      \cons
+    }{(
+      \app{
+        \textcolor{red}{
+          (\abs{\avar}{\nat}{
+            \app{\app{
+              \symb{plus}
+            }{
+              (\app{\suc}{\nul})
+            }}{
+              \avar
+            }
+          })
+        }
+      }{
+        \textcolor{blue}{\nul}
+      }
+    )}
+  }{
+    (\app{
+      \app{
+        \symb{map}
+      }{
+        \textcolor{red}{
+          (\abs{\avar}{\nat}{
+            \app{\app{
+              \symb{plus}
+            }{
+              (\app{\suc}{\nul})
+            }}{
+              \avar
+            }
+          })
+        }
+      }
+    }{
+      \textcolor{green}{\nil}
+    })
+  }
+\]
+using the meta-substitution $[F:=\metaabs{}{\textcolor{red}{\abs{\avar}{\nat}{\app{\app{\symb{plus}}{(\app{\suc}{\nul})}}{\avar}}}},
+  x:=\metaabs{}{\textcolor{blue}{\nul}},t:=\metaabs{}{\textcolor{green}{\nil}]}$.
+This in turn reduces by a $\arr{\beta}$ step to:
+\[
+  \app{
+    \app{
+      \cons
+    }{(
+      \app{
+        \textcolor{red}{
+            \app{
+              \symb{plus}
+            }{
+              (\app{\suc}{\nul})
+            }
+        }
+      }{
+        \textcolor{blue}{\nul}
+      }
+    )}
+  }{
+    (\app{
+      \app{
+        \symb{map}
+      }{
+        \textcolor{red}{
+          (\abs{\avar}{\nat}{
+            \app{\app{
+              \symb{plus}
+            }{
+              (\app{\suc}{\nul})
+            }}{
+              \avar
+            }
+          })
+        }
+      }
+    }{
+      \textcolor{green}{\nil}
+    })
+  }
+\]
+\end{example}
+
+\begin{example}
+In the above example, all variables have arity $0$.  Now suppose $\Rules$ instead contains a rule
+where $F$ has arity $1$:
+\[
+\app{\app{\symb{map}}{(\abs{\cvar}{\nat}{(\app{F}{\cvar})})}}{(\app{\app{\cons}{x}}{y})} \arrz
+\app{\app{\cons}{(\app{F}{x})}}{(\app{\app{\symb{map}}{(\abs{\cvar}{\nat}{(\app{F}{\cvar})})}}{y})}
+\]
+In this case, $\app{\app{\symb{map}}{\textcolor{red}{(\app{\symb{plus}}{(\app{\suc}{\nul})})}}}{(\app{\app{\cons}{\textcolor{blue}{\nul}}}{\textcolor{green}{\nil}})}$
+\emph{does not reduce}, since every instance of the left-hand side has a $\lambda$-abstraction as the first argument of $\map$.
+
+On the other hand,
+$\app{
+  \app{
+    \symb{map}
+  }{
+    (\abs{\avar}{\nat}{
+      \app{\textcolor{red}{\app{
+        \symb{plus}
+      }{
+        (\app{\suc}{\nul})
+      }}}{
+        \avar
+      }
+    })
+  }
+}{
+  (\app{\app{\cons}{\textcolor{blue}{\nul}}}{\textcolor{green}{\nil}})
+}$
+does reduce, to
+\[
+  \app{
+    \app{
+      \cons
+    }{(
+      \app{
+        \textcolor{red}{
+            \app{
+              \symb{plus}
+            }{
+              (\app{\suc}{\nul})
+            }
+        }
+      }{
+        \textcolor{blue}{\nul}
+      }
+    )}
+  }{
+    (\app{
+      \app{
+        \symb{map}
+      }{
+        \textcolor{red}{
+          (\abs{\avar}{\nat}{
+            \app{\app{
+              \symb{plus}
+            }{
+              (\app{\suc}{\nul})
+            }}{
+              \avar
+            }
+          })
+        }
+      }
+    }{
+      \textcolor{green}{\nil}
+    })
+  }
+\]
+(in one go), by using the meta-substitution
+$[F:=\metaabs{y\!:\!\nat}{\app{\textcolor{red}{\app{\symb{plus}}{(\app{\suc}{\nul})}}}{y}},
+  x:=\metaabs{}{\textcolor{blue}{\nul}},t:=\metaabs{}{\textcolor{green}{\nil}}]$.
+Similarly, 
+$\app{
+  \app{
+    \symb{map}
+  }{
+    (\abs{\avar}{\nat}{
+      \textcolor{red}{\app{
+        \app{\symb{plus}}{\textcolor{black}{\avar}}}{
+        (\app{\suc}{\nul})
+      }}
+    })
+  }
+}{
+  (\app{\app{\cons}{\textcolor{blue}{\nul}}}{\textcolor{green}{\nil}})
+}$
+reduces at the root to
+\[
+  \app{
+    \app{
+      \cons
+    }{(
+      \textcolor{red}{
+        \app{
+          \app{\symb{plus}}{\textcolor{blue}{\nul}}
+        }{(\app{\suc}{\nul})}
+        }
+    )}
+  }{
+    (\app{
+      \app{
+        \symb{map}
+      }{
+        (\abs{\avar}{\nat}{
+          \textcolor{red}{
+            \app{\app{
+              \symb{plus}
+            }{
+              \textcolor{black}{\avar}
+            }}{
+              (\app{\suc}{\nul})
+            }
+          }
+        })
+      }
+    }{
+      \textcolor{green}{\nil}
+    })
+  }
+\]
+\end{example}
+
+\section{Potential subcategories}
+
+The formalism described in this paper does not have a clear name in the literature, although it is
+a slight variation (to be precise: a restricted version) of systems that appear in various sources
+(e.g., \cite{bla:00,kop:12}).
+Essentially, it is a simply-typed version of \emph{combinatory reduction systems}~\cite{klo:80},
+with a $\beta$-rule implicitly included for all types.
+We have imposed sanity limitations that often occur in the literature like limiting left-hand sides
+to patterns and requiring right-hand sides to be in $\beta$-normal form; in the rare cases where
+benchmarks are desired that violate these restrictions this can easily be encoded by including an
+explicit ``application'' symbol $\symb{@}$ of the required type, and adding a rule
+$\app{\app{\symb{@}}{(\abs{\avar}{\atype}{\app{F}{\avar}})}}{\bvar} \arrz \app{F}{\bvar}$.
+
+There are other formalisms of higher-order term rewriting in the literature, several of which can be
+viewed as limitations of, or strategies for, the formalism described here.  Hence, the same
+benchmarks (or: a subset thereof) can be used in different categories should the need arise.  We
+list the most pertinent of them below.
+
+\subsection{Simply-typed Term Rewriting Systems~\cite{kus:01}}
+
+In this case, the set of terms is restricted to \emph{$\lambda$-free terms}; that is, abstraction
+is not permitted in term formation.  This limits both rule formation (no lambdas may occur on
+either side of a rule), but also the terms that should be considered for termination or confluence.
+Since terms contain no abstractions, the $\arr{\beta}$ step is not part of reduction.
+
+\begin{example}
+Let $\symb{A} \hastype \mathsf{o} \arrtype \mathsf{o} \arrtype{o}$ and
+$\symb{L} \hastype (\mathsf{o} \arrtype \mathsf{o}) \arrtype{o}$, and
+$\Rules = \{ \app{\symb{A}}{(\app{\symb{L}}{\avar})} \arrz x \}$.
+(Note that this rule has type $\mathsf{o} \arrtype \mathsf{o}$.)
+This system is:
+\begin{itemize}
+\item \emph{terminating} when viewed as an STRS, because every step decreases the size o fthe term
+\item \emph{non-terminating} when viewed in the default way, because, writing
+  $\omega = \app{\symb{L}}{(\abs{\avar}{\mathtt{o}}{\app{\app{\symb{A}}{\avar}}{\avar}})}$,
+  we have $
+  \app{\app{\symb{A}}{\omega}}{\omega} =
+  \app{\app{\symb{A}}{(\app{\symb{L}}{\underline{(\abs{\avar}{\mathtt{o}}{\app{\app{\symb{A}}{\avar}}{\avar}})}})}}{\omega} \arr{\Rules}
+  \app{(\abs{\avar}{\mathtt{o}}{\app{\app{\symb{A}}{\avar}}{\avar}})}{\omega} \arr{\beta}
+  \app{\app{\symb{A}}{\omega}}{\omega}$.
+\end{itemize}
+\end{example}
+
+\subsection{Plain higher-order rewriting~\cite{jou:rub:99}}
+
+In this case, the set of terms is not restricted, but the set of \emph{rules} is: we require that
+$\arity(\avar) = 0$ for all variables.  That is, variables should always occur unapplied in the
+left-hand side, and meta-substitution is just substitution.  This means matching is \emph{plain}.
+This is the formalism that was used in the higher-order category of the termination competition up
+to 2024.
+
+\begin{example}
+In plain systems, there is no way to specify a rule
+\[
+\begin{array}{c}
+\app{\symb{der}}{(\abs{\avar}{\real}{(\app{\app{\symb{plus}}{(\app{F}{\avar})}}{(\app{G}{\avar})})})}\ \arrz \\
+\abs{\avar}{\real}{\app{\app{\symb{plus}}{
+    (\app{(\app{\symb{der}}{(\abs{\bvar}{\nat}{(\app{F}{\bvar})})})}{\avar})
+  }}{
+    (\app{(\app{\symb{der}}{(\abs{\bvar}{\nat}{(\app{F}{\bvar})})})}{\avar})
+  }}
+\end{array}
+\]
+However, for systems that can be specified with arity $0$ for all variables (such as
+Example~\ref{ex:map} and all STRSs), termination and confluence are equivalent whether we consider
+the systems as plain or default (since the set of terms and the reduction relation are unchanged).
+\end{example}
+
+\subsection{Pattern higher-order rewriting systems~\cite{nip:91}}
+
+This formalism as defined considers rewriting modulo $\alpha\beta\eta$.  However, it can be
+modeled in our default formalism by (1) limiting the set of terms to terms in $\eta$-long form, and
+(2) imposing a \emph{priority}: $\arr{\beta}$ must always be applied before any step using a rule.
+
+\begin{example}
+Let $\symb{h} \hastype (\mathsf{o} \arrtype \mathsf{o}) \arrtype \mathsf{o}$ and $\symb{a} \hastype \mathsf{o}$,
+and $\Rules = \{ \app{\symb{h}}{F} \arrz \app{F}{(\app{\symb{h}}{(\abs{\avar}{\mathsf{o}}{\symb{a}})})} \}$.
+This system is:
+\begin{itemize}
+\item \emph{terminating} when viewed as a PRS, since the priority ensures that, when
+  $\app{\symb{h}}{(\abs{\avar}{\mathsf{o}}{\symb{a}})}$ is reduced, the result is immediately
+  $\beta$-normalised to $\symb{a}$; termination of the whole system then follows by a computability
+  argument;
+\item \emph{non-terminating} when viewed in the default way, since
+  $\app{\symb{h}}{(\abs{\avar}{\mathsf{o}}{\symb{a}})} \arr{\Rules}
+  \app{(\abs{\avar}{\mathsf{o}}{\symb{a}})}{\underline{(\app{\symb{h}}{(\abs{\avar}{\mathsf{o}}{\symb{a}})})}}$,
+  which contains the original term as a subterm.
+\end{itemize}
+\end{example}
+
+Note that, for rules to be usable on terms in $\eta$-long form, they should match on $\eta$-long
+terms, and result in them as well; hence, benchmarks can only be used as PRS benchmarks if, for all
+rules $\ell \arrz r \in \Rules$, both $\ell$ and $r$ are well-behaved for the set $\FV(\ell)$:
+\begin{itemize}
+\item all variables in $\FV(\ell)$ are well-behaved;
+\item $\abs{\avar}{\atype}{s}$ is well-behaved if $s$ is;
+\item a term whose type is a sort is well-behaved if it has one of the forms
+  $\app{\avar}{s_1} \cdots s_n$ or $\app{\afun}{s_1} \cdots s_n$, and all $s_i$ are well-behaved.
+\end{itemize}
+(That is, $\ell$ and $r$ are $\beta$-normal terms which are \emph{mostly} in $\eta$-long form,
+except the free variables do not need to be expanded.)
+
+\bibliographystyle{plain}
+\bibliography{stcrs}
+
+\end{document}
+
