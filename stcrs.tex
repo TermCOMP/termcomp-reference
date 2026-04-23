@@ -1,127 +1,11 @@
-\documentclass{lmcs}
-\pdfoutput=1
-
-\usepackage{enumerate}
-\usepackage[colorlinks=true]{hyperref}
-\usepackage{amssymb}
-\usepackage{xcolor,latexsym,amsmath,extarrows,alltt}
-\usepackage{xspace}
-\usepackage{booktabs}
-\usepackage{mathtools}
-\usepackage{enumitem}
-\usepackage{stmaryrd}
-\usepackage{microtype}
-
-\theoremstyle{theorem}\newtheorem{theorem}{Theorem}
-\theoremstyle{theorem}\newtheorem{lemma}[theorem]{Lemma}
-\theoremstyle{theorem}\newtheorem{corollary}[theorem]{Corollary}
-\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
-\theoremstyle{definition}\newtheorem{example}[theorem]{Example}
-
-\newcommand{\N}{\mathbb{N}}
-\newcommand{\F}{\mathcal{F}}
-\newcommand{\V}{\mathcal{V}}
-\newcommand{\Vmeta}{\mathcal{M}}
-\newcommand{\Vfree}{\mathcal{V}_{\mathit{nonb}}}
-\newcommand{\Vbound}{\mathcal{V}}
-\newcommand{\Sorts}{\mathcal{S}}
-\newcommand{\Types}{\mathcal{T}\!ypes}
-\newcommand{\Terms}{\mathcal{T}}
-\newcommand{\ATerms}{\mathcal{T}_{\mathcal{A}}}
-\newcommand{\FOTerms}{\mathcal{T}_{\mathcal{FO}}}
-\newcommand{\Rules}{\mathcal{R}}
-\newcommand{\FV}{\mathit{FV}}
-\newcommand{\FMV}{\mathit{MVar}}
-\newcommand{\Positions}{\mathit{Positions}}
-\newcommand{\SubPositions}{\mathit{SubPositions}}
-\newcommand{\HeadPositions}{\mathit{HeadPositions}}
-\newcommand{\Pairs}{\mathit{Pairs}}
-
-\newcommand{\domain}{\mathtt{domain}}
-\newcommand{\order}{\mathit{order}}
-
-\newcommand{\asort}{\iota}
-\newcommand{\bsort}{\kappa}
-\newcommand{\atype}{\sigma}
-\newcommand{\btype}{\tau}
-\newcommand{\ctype}{\pi}
-\newcommand{\dtype}{\alpha}
-\newcommand{\identifier}[1]{\mathtt{#1}}
-\newcommand{\afun}{\identifier{f}}
-\newcommand{\bfun}{\identifier{g}}
-\newcommand{\cfun}{\identifier{h}}
-\newcommand{\avar}{x}
-\newcommand{\bvar}{y}
-\newcommand{\cvar}{z}
-\newcommand{\Avar}{X}
-\newcommand{\Bvar}{Y}
-\newcommand{\Cvar}{Z}
-\newcommand{\AFvar}{F}
-\newcommand{\BFvar}{G}
-\newcommand{\CFvar}{H}
-\newcommand{\typeof}{\mathsf{typeof}}
-
-\newcommand{\clause}[1]{\textbf{#1}}
-\newcommand{\hastype}{\ \mathtt{::}\ }
-
-\newcommand{\abs}[3]{\lambda #1\!:\!#2.#3}
-\newcommand{\app}[2]{#1 \cdot #2}
-\newcommand{\apps}[3]{#1 \cdot #2 \cdots #3}
-\newcommand{\metaabs}[2]{\langle #1\rangle#2}
-\newcommand{\metaabsn}[4]{\metaabs{#1_1\!:\!#2_1,\dots,#1_n\!:\!#2_{#3}}{#4}}
-\newcommand{\metaabslist}[3]{\langle #1_1\!:\!#2_1,\dots,#1_n\!:\!#2_{#3} \rangle}
-
-\newcommand{\arity}{\mathit{ar}}
-\newcommand{\head}{\mathsf{head}}
-\newcommand{\arrtype}{\rightarrow}
-\newcommand{\arrz}{\Rightarrow}
-\newcommand{\arr}[1]{\arrz_{#1}}
-\newcommand{\arrr}[1]{\arr{#1}^*}
-\newcommand{\subtermeq}{\unlhd}
-\newcommand{\headsubtermeq}{\unlhd_{\bullet}}
-\newcommand{\supterm}{\rhd}
-\newcommand{\suptermeq}{\unrhd}
-\newcommand{\replace}[3]{#1_{#2:=#3}}
-
-\newcommand{\symb}[1]{\mathtt{#1}}
-
-\newcommand{\nul}{\symb{0}}
-\newcommand{\one}{\symb{1}}
-\newcommand{\nil}{\symb{nil}}
-\newcommand{\cons}{\symb{cons}}
-\newcommand{\strue}{\symb{true}}
-\newcommand{\sfalse}{\symb{false}}
-\newcommand{\append}{\symb{append}}
-\newcommand{\suc}{\symb{s}}
-\newcommand{\map}{\symb{map}}
-\newcommand{\bool}{\symb{bool}}
-\newcommand{\nat}{\symb{nat}}
-\newcommand{\real}{\symb{real}}
-\newcommand{\lijst}{\symb{list}}
-\newcommand{\unitsort}{\mathtt{o}}
-
-\newcommand{\cora}{\textsf{CORA}\xspace}
-
-\newcommand{\secshort}{\S}
-\newcommand{\myparagraph}[1]{\paragraph{\textbf{#1}}}
-
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{\bigskipamount}
-\setlist[itemize]{topsep=-\bigskipamount}
-
-\newcommand{\mysubsection}[1]{\vspace{-12pt}\subsubsection{#1}}
-
-\begin{document}
-
-\title{Higher-order rewriting (union beta)}
-
-\maketitle
+\chapter{Higher-order rewriting (union beta)}
+\chapterauthor{Cynthia Kop}
 
 \begin{abstract}
-The following pages describe the syntax and semantics of the higher-order ARI formalism.
-This format is simply-typed (without formalism) and in principle curried.  Matching is
-\emph{mostly} plain, though a limited form of higher-order matching modulo beta is
-included for pattrens.
+  The following pages describe the syntax and semantics of the higher-order ARI formalism.
+  This format is simply-typed (without formalism) and in principle curried.  Matching is
+  \emph{mostly} plain, though a limited form of higher-order matching modulo beta is
+  included for pattrens.
 \end{abstract}
 
 \section{Syntax}
@@ -729,6 +613,3 @@ except the free variables do not need to be expanded.)
 
 \bibliographystyle{plain}
 \bibliography{stcrs}
-
-\end{document}
-

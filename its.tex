@@ -1,0 +1,40 @@
+\chapter{Integer Transition Systems}
+\chapterauthor{Florian Frohn}
+
+\section{Syntax}
+
+\subsection{Grammar}
+\
+
+\begin{tabular}{lll}
+its & ::= & \texttt{(format LCTRS) (theory Ints)} fun+ entrypoint rule+ \\
+fun & ::= & \texttt{(fun} IDENTIFIER \texttt{(->} int+\texttt{))} \\
+int & ::= & \texttt{Int} \\
+entrypoint & ::= & \texttt{(entrypoint} IDENTIFIER\texttt{)} \\
+lhs & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER IDENTIFIER+\texttt{)} \\
+rhs & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER intterm+\texttt{)} \\
+guard & ::= & \texttt{:guard} formula \\
+var & ::= & \texttt{:var (}IDENTIFIER type\texttt{)} \\
+rule & ::= & \texttt{(rule} lhs rhs guard? var*\texttt{)} \\
+\end{tabular}
+
+\bigskip
+Here, ``intterm'' refers to a term of type \texttt{Int} from the underlying SMT-theory \texttt{Ints}, and ``formula'' refers to a term of type \texttt{Bool}.
+%
+The IDENTIFIER in ``entrypoint'' must be one of the previously declared functions.
+%
+We allow arbitrary terms and formulas from the \texttt{Ints} theory.
+%
+In particular, this means that we allow:
+\begin{itemize}
+\item non-linear arithmetic
+\item exponentiation
+\item quantifiers
+\item \texttt{ite} (if-then-else) expressions
+\item \texttt{let} expressions
+\item variables of type \texttt{Bool}
+\item disjunctions
+\item $\ldots$
+\end{itemize}
+
+The \texttt{:var} statements are required if the types of variables cannot be inferred (e.g., if the only occurrences of \texttt{x,y} are in the literal \texttt{(= x y)}).

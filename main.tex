@@ -1,0 +1,75 @@
+\documentclass{report}
+
+\usepackage{amsthm}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{microtype}
+
+\theoremstyle{theorem}\newtheorem{theorem}{Theorem}
+\theoremstyle{definition}\newtheorem{example}[theorem]{Example}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\Sorts}{\mathcal{S}}
+\newcommand{\Types}{\mathcal{T}\!ypes}
+\newcommand{\Rules}{\mathcal{R}}
+\newcommand{\FV}{\mathit{FV}}
+
+\newcommand{\domain}{\mathtt{domain}}
+
+\newcommand{\asort}{\iota}
+\newcommand{\atype}{\sigma}
+\newcommand{\btype}{\tau}
+\newcommand{\identifier}[1]{\mathtt{#1}}
+\newcommand{\afun}{\identifier{f}}
+\newcommand{\avar}{x}
+\newcommand{\bvar}{y}
+\newcommand{\cvar}{z}
+
+\newcommand{\hastype}{\ \mathtt{::}\ }
+
+\newcommand{\abs}[3]{\lambda #1\!:\!#2.#3}
+\newcommand{\app}[2]{#1 \cdot #2}
+\newcommand{\apps}[3]{#1 \cdot #2 \cdots #3}
+\newcommand{\metaabs}[2]{\langle #1\rangle#2}
+\newcommand{\metaabsn}[4]{\metaabs{#1_1\!:\!#2_1,\dots,#1_n\!:\!#2_{#3}}{#4}}
+\newcommand{\metaabslist}[3]{\langle #1_1\!:\!#2_1,\dots,#1_n\!:\!#2_{#3} \rangle}
+
+\newcommand{\arity}{\mathit{ar}}
+\newcommand{\arrtype}{\rightarrow}
+\newcommand{\arrz}{\Rightarrow}
+\newcommand{\arr}[1]{\arrz_{#1}}
+\newcommand{\supterm}{\rhd}
+\newcommand{\suptermeq}{\unrhd}
+\newcommand{\replace}[3]{#1_{#2:=#3}}
+
+\newcommand{\symb}[1]{\mathtt{#1}}
+
+\newcommand{\nul}{\symb{0}}
+\newcommand{\nil}{\symb{nil}}
+\newcommand{\cons}{\symb{cons}}
+\newcommand{\suc}{\symb{s}}
+\newcommand{\map}{\symb{map}}
+
+\newcommand{\nat}{\symb{nat}}
+
+
+\makeatletter
+\newcommand{\chapterauthor}[1]{%
+  {\parindent0pt\vspace*{-25pt}%
+  \linespread{1.1}\large\scshape#1%
+  \par\nobreak\vspace*{35pt}}
+  \@afterheading%
+}
+\makeatother
+
+
+\begin{document}
+
+\tableofcontents
+\input{stcrs}
+\input{its}
+
+\end{document}
