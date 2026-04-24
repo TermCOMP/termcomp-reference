@@ -74,7 +74,7 @@ The unique entrypoint (as defined by the line \texttt{(entrypoint ...)}) is deno
 %
 A \emph{configuration} is a term $f(c_1,\ldots,c_n)$ where $f \in \F$ and $c_1,\ldots,c_n \in \Z$.
 %
-A \emph{valuation} is a mapping $\sigma: \V \to \Z$.
+A \emph{valuation} is a mapping $\sigma: \V \to \Z \cup \B$ (where $\B = \{\top,\bot\}$ denotes the Booleans) that respects the types of variables (i.e., variables of type \texttt{Int} are mapped to $\Z$, and variables of type \texttt{Bool} are mapped to $\B$).
 %
 $\Rules$ induces a rewrite relation on configurations as follows:
 %
