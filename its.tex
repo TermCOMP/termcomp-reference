@@ -1,6 +1,16 @@
 \chapter{Integer Transition Systems}
 \chapterauthor{Florian Frohn}
 
+\begin{abstract}
+  This chapter describes the syntax and semantics for \emph{Integer Transition Systems}.
+  %
+  Such systems are \emph{Logically Constrained Term Rewrite Systems} (LCTRSs) where the underlying SMT theory is fixed to the theory of integers, and where function symbols must not occur anywhere but at the root position.
+  %
+  Due to the latter restriction, we only consider top-level rewriting.
+  %
+  Intuitively, such programs correspond to \texttt{while}-programs (or, equivalently, tail-recursive programs) operating on integers.
+\end{abstract}
+
 \section{Syntax}
 
 \subsection{Grammar}
@@ -12,17 +22,23 @@ fun & ::= & \texttt{(fun} IDENTIFIER \texttt{(->} int+\texttt{))} \\
 int & ::= & \texttt{Int} \\
 entrypoint & ::= & \texttt{(entrypoint} IDENTIFIER\texttt{)} \\
 lhs & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER IDENTIFIER+\texttt{)} \\
-rhs & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER intterm+\texttt{)} \\
+rhs & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER int-term+\texttt{)} \\
 guard & ::= & \texttt{:guard} formula \\
 var & ::= & \texttt{:var (}IDENTIFIER type\texttt{)} \\
 rule & ::= & \texttt{(rule} lhs rhs guard? var*\texttt{)} \\
 \end{tabular}
 
 \bigskip
-Here, ``intterm'' refers to a term of type \texttt{Int} from the underlying SMT-theory \texttt{Ints}, and ``formula'' refers to a term of type \texttt{Bool}.
+Here, ``int-term'' refers to a term of type \texttt{Int} from the underlying SMT-theory \texttt{Ints}, and ``formula'' refers to a term of type \texttt{Bool}.
 %
+The \texttt{:var} statements are required if the types of variables cannot be inferred (e.g., if the only occurrences of \texttt{x,y} are in the literal \texttt{(= x y)}).
+
+\subsection{Restrictions}
+
 The IDENTIFIER in ``entrypoint'' must be one of the previously declared functions.
-%
+
+\subsection{Remarks}
+
 We allow arbitrary terms and formulas from the \texttt{Ints} theory.
 %
 In particular, this means that we allow:
@@ -33,8 +49,45 @@ In particular, this means that we allow:
 \item \texttt{ite} (if-then-else) expressions
 \item \texttt{let} expressions
 \item variables of type \texttt{Bool}
-\item disjunctions
-\item $\ldots$
+\item all usual Boolean connectives (conjunction, disjunction, negation, implication, $\ldots$)
 \end{itemize}
 
-The \texttt{:var} statements are required if the types of variables cannot be inferred (e.g., if the only occurrences of \texttt{x,y} are in the literal \texttt{(= x y)}).
+We do not require left-linearity, so, e.g.,
+\begin{center}
+  \texttt{(rule (f x x) (g x))}
+\end{center}
+is a valid rule.
+
+\section{Semantics}
+
+Let $\F$ be the set of all declared function symbols (i.e., we have $\mathtt{f} \in \F$ if the input file contains a line \texttt{(fun f \ldots)}).
+%
+In the sequel, we write $f(t_1,\ldots,t_n)$ instead of $\mathtt{(f\ t_1\ \ldots\ t_n)}$ for the sake of readability.
+%
+Moreover, we always assume that terms respect the arity of the respective function symbols (i.e., if we write $f(t_1,\ldots,t_n)$, then we implicitly assume that $f$ has been declared as $\mathtt{(fun\ f\ ({-}{>}\ \underbrace{\mathtt{Int\ \ldots\ Int}}_{n \times}\ Int))}$.
+%
+For a rule with left-hand side $\ell$, right-hand side $r$, and guard $\varphi$, we write $\ell \to r\ \guard{\varphi}$.
+%
+$\Rules$ denotes the set of all rules that are defined in the input file and $\V$ contains all variables that occur in the input file.
+%
+The unique entrypoint (as defined by the line \texttt{(entrypoint ...)}) is denoted $\mathit{entry}$.
+%
+A \emph{configuration} is a term $f(c_1,\ldots,c_n)$ where $f \in \F$ and $c_1,\ldots,c_n \in \Z$.
+%
+A \emph{valuation} is a mapping $\sigma: \V \to \Z$.
+%
+$\Rules$ induces a rewrite relation on configurations as follows:
+%
+We have
+\[
+  f(c_1,\ldots,c_n) \to_\Rules g(d_1,\ldots,d_m)
+\]
+if there is a rule $f(x_1\ldots,x_n) \to g(t_1,\ldots,t_m)\ \guard{\varphi} \in \Rules$ and a valuation $\sigma$ such that $\sigma(x_i) = c_i$ for all $i \in \{1, \ldots, n\}$, $t_i\sigma \equiv_{\mathtt{Ints}} d_i$ for all $i \in \{1, \ldots, m\}$, and $\sigma \models_{\mathtt{Ints}} \varphi$.
+%
+Here, $\sigma \models_{\mathtt{Ints}} \varphi$ means that there is an extension $\theta \in \mathtt{Ints}$ of $\sigma$ such that $\theta \models \varphi$ (note that SMT theories are defined as classes of structures), and $t_i\sigma \equiv_{\mathtt{Ints}} d_i$ means that we have $\theta \models t_i\sigma = d_i$ for all $\theta \in \mathtt{Ints}$.
+%
+A \emph{run} is a (possibly infinite) sequence
+\[
+  \mathit{entry}(c_1,\ldots,c_n) \to_\Rules s_1 \to_\Rules s_2 \to_\Rules \ldots
+\]
+An integer transition system terminates if all runs are finite.

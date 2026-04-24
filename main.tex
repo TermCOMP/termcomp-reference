@@ -5,11 +5,13 @@
 \usepackage{amssymb}
 \usepackage{mathtools}
 \usepackage{microtype}
+\usepackage{stmaryrd}
 
 \theoremstyle{theorem}\newtheorem{theorem}{Theorem}
 \theoremstyle{definition}\newtheorem{example}[theorem]{Example}
 
 \newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
 \newcommand{\F}{\mathcal{F}}
 \newcommand{\V}{\mathcal{V}}
 \newcommand{\Sorts}{\mathcal{S}}
@@ -55,6 +57,7 @@
 
 \newcommand{\nat}{\symb{nat}}
 
+\newcommand{\guard}[1]{\llbracket #1 \rrbracket}
 
 \makeatletter
 \newcommand{\chapterauthor}[1]{%
