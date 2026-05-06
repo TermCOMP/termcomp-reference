@@ -111,9 +111,9 @@ The \emph{runtime complexity} is the function $\rc\colon\Sigma\rightarrow\N \cup
 %
 \noindent
 %
-A function $rb\colon\Sigma\rightarrow\N \cup \{\omega\}$ is called an \emph{upper runtime bound} if $\rc(\sigma) \leq rb(\sigma)$ for all $\sigma \in \Sigma$.
-%
-Similarly, a function $lb\colon\Sigma\rightarrow\N \cup \{\omega\}$ is called a \emph{lower runtime bound} if $\rc(\sigma) \geq lb(\sigma)$ for all $\sigma \in \Sigma$.
+% A function $rb\colon\Sigma\rightarrow\N \cup \{\omega\}$ is called an \emph{upper runtime bound} if $\rc(\sigma) \leq rb(\sigma)$ for all $\sigma \in \Sigma$.
+% %
+% Similarly, a function $lb\colon\Sigma\rightarrow\N \cup \{\omega\}$ is called a \emph{lower runtime bound} if $\rc(\sigma) \geq lb(\sigma)$ for all $\sigma \in \Sigma$.
 %
 \subsection{Termination}
 %
@@ -142,23 +142,23 @@ Formally, let $|\sigma| = \max \{ |\sigma(x_j)| \mid 1 \leq i \leq n \}$ denote 
 For the lower bound \texttt{LB}, the possible outputs and their semantics are:
 \begin{itemize}
     \item \texttt{?}: No lower bound could be established.
-    \item \text{\texttt{Omega(n\textasciicircum}$k$\texttt{)}}: A polynomial lower bound of degree $k \in \N$, i.e., $lb(\sigma) \in \Omega(|\sigma|^k)$.
+    \item \text{\texttt{Omega(n\textasciicircum}$k$\texttt{)}}: A polynomial lower bound of degree $k \in \N$, i.e., $rc(\sigma) \in \Omega(|\sigma|^k)$.
       %
-      The output \texttt{Omega(n)} is equivalent to \texttt{Omega(n\textasciicircum 1)}.
-      %
-      The output \texttt{Omega(1)} is equivalent to \texttt{?}.
+      \begin{itemize}
+      \item The output \texttt{Omega(n)} is equivalent to \texttt{Omega(n\textasciicircum 1)}.
+      \item The output \texttt{Omega(1)} is equivalent to \texttt{?}.
+      \end{itemize}
     \item \texttt{NON\_POLY}: A super-polynomial (e.g., exponential) lower bound.
-    \item \texttt{INF}: An infinite lower bound (for non-terminating ITSs, or terminating ITSs with unbounded runtime)
+    \item \texttt{INF}: An infinite lower bound (for non-terminating ITSs, or terminating ITSs with unbounded runtime).
 \end{itemize}
 %
 Similarly, for the upper bound \texttt{UB}, the possible outputs and their semantics are:
 \begin{itemize}
     \item \texttt{?}: No upper bound could be established.
-    \item \text{\texttt{O(n\textasciicircum}$k$\texttt{)}}: A polynomial upper bound of degree $k \in \N$, i.e., $rb(\sigma) \in \mathcal{O}(|\sigma|^k)$.
-      %
-      The output \texttt{Omega(n)} is equivalent to \texttt{Omega(n\textasciicircum 1)}.
-      %
-      The output \texttt{Omega(1)} is equivalent to \texttt{Omega(n\textasciicircum 0)}.
-    \item \texttt{POLY}: A polynomial upper bound of an arbitrary degree, i.e., $rb(\sigma) \in \mathcal{O}(|\sigma|^c)$ for some constant $c$.
-    \item \texttt{EXP}: An exponential upper bound.
+    \item \text{\texttt{O(n\textasciicircum}$k$\texttt{)}}: A polynomial upper bound of degree $k \in \N$, i.e., $rc(\sigma) \in \mathcal{O}(|\sigma|^k)$.
+      \begin{itemize}
+      \item The output \texttt{Omega(n)} is equivalent to \texttt{Omega(n\textasciicircum 1)}.
+      \item The output \texttt{Omega(1)} is equivalent to \texttt{Omega(n\textasciicircum 0)}.
+      \end{itemize}
+    \item \texttt{FINITE}: A finite lower bound.
 \end{itemize}
