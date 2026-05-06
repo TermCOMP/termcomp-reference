@@ -1,8 +1,9 @@
 \chapter{Integer Transition Systems}
 \chapterauthor{Florian Frohn}
+\chapterauthor{Nils Lommen}
 
 \begin{abstract}
-  This chapter describes the syntax and semantics for \emph{Integer Transition Systems}.
+  This chapter describes the syntax and semantics for \emph{Integer Transition Systems (ITSs)}.
   %
   Such systems are \emph{Logically Constrained Term Rewrite Systems} (LCTRSs) where the underlying SMT theory is fixed to the theory of integers, and where function symbols must not occur anywhere but at the root position.
   %
@@ -62,11 +63,11 @@ is a valid rule.
 
 Let $\F$ be the set of all declared function symbols (i.e., we have $\mathtt{f} \in \F$ if the input file contains a line \texttt{(fun f \ldots)}).
 %
-In the sequel, we write $f(t_1,\ldots,t_i)$ instead of $\mathtt{(f\ t_1\ \ldots\ t_i)}$ for the sake of readability.
+In the sequel, we write $f(t_1,\ldots,t_n)$ instead of $\mathtt{(f\ t_1\ \ldots\ t_n)}$ for the sake of readability.
 %
 Moreover, we always assume that terms respect the arity of the respective function symbols.
 %
-Thus, if we write $f(t_1,\ldots,t_i)$, then we implicitly assume that $f$ has been declared as $$\mathtt{(fun\ f\ (\texttt{->}\ \underbrace{\mathtt{Int\ \ldots\ Int}}_{n \text{ times}}\ Int))}.$$
+Thus, if we write $f(t_1,\ldots,t_n)$, then we implicitly assume that $f$ has been declared as $$\mathtt{(fun\ f\ (\texttt{->}\ \underbrace{\mathtt{Int\ \ldots\ Int}}_{n \text{ times}}\ Int))}.$$
 %
 For a rule with left-hand side $\ell$, right-hand side $r$, and guard $\varphi$, we write $\ell \to r\ \guard{\varphi}$.
 %
@@ -74,7 +75,9 @@ $\Rules$ denotes the set of all rules that are defined in the input file and $\V
 %
 The unique entrypoint (as defined by the line \texttt{(entrypoint ...)}) is denoted $\mathit{entry}$.
 %
-A \emph{configuration} is a term $f(c_1,\ldots,c_i)$ where $f \in \F$ and $c_1,\ldots,c_i \in \Z$.
+A \emph{configuration} is a term $f(c_1,\ldots,c_n)$ where $f \in \F$ and $c_1,\ldots,c_n \in \Z$.
+%
+$\CC$ is the set of all configurations.
 %
 A \emph{valuation} is a mapping $\sigma: \V \to \Z \cup \B$ (where $\B = \{\top,\bot\}$ denotes the Booleans) that respects the types of variables (i.e., variables of type \texttt{Int} are mapped to $\Z$, and variables of type \texttt{Bool} are mapped to $\B$).
 %
@@ -84,32 +87,33 @@ $\Rules$ induces a rewrite relation on configurations as follows:
 %
 We have
 \[
-  f(c_1,\ldots,c_i) \to_\Rules g(d_1,\ldots,d_m)
+  f(c_1,\ldots,c_n) \to g(d_1,\ldots,d_m)
 \]
-if there is a rule $f(x_1\ldots,x_i) \to g(t_1,\ldots,t_m)\ \guard{\varphi} \in \Rules$ and a valuation $\sigma\in\Sigma$ such that $\sigma(x_i) = c_i$ for all $i \in \{1, \ldots, n\}$, $t_i\sigma \equiv_{\mathtt{Ints}} d_i$ for all $i \in \{1, \ldots, m\}$, and $\sigma \models_{\mathtt{Ints}} \varphi$.
+if there is a rule $f(x_1\ldots,x_n) \to g(t_1,\ldots,t_m)\ \guard{\varphi} \in \Rules$ and a valuation $\sigma\in\Sigma$ such that $\sigma(x_i) = c_i$ for all $i \in \{1, \ldots, n\}$, $t_i\sigma \equiv_{\mathtt{Ints}} d_i$ for all $i \in \{1, \ldots, m\}$, and $\sigma \models_{\mathtt{Ints}} \varphi$.
 %
 Here, $\sigma \models_{\mathtt{Ints}} \varphi$ means that there is an extension $\theta \in \mathtt{Ints}$ of $\sigma\in\Sigma$ such that $\theta \models \varphi$ (note that SMT theories are defined as classes of structures), and $t_i\sigma \equiv_{\mathtt{Ints}} d_i$ means that we have $\theta \models t_i\sigma = d_i$ for all $\theta \in \mathtt{Ints}$.
 %
 An \emph{evaluation} is a sequence
 \[
-  \mathit{entry}(c_1,\ldots,c_i) \to_\Rules s_1 \to_\Rules \ldots \to_\Rules s_k
+  \mathit{entry}(c_1,\ldots,c_n) \to s_1 \to \ldots \to s_k.
 \]
-for configurations $s_1,\dots,s_k$ and an initial valuation $\sigma$ such that $\sigma(x_i) = c_i$.
 %
+An ITS terminates if all evaluations are finite.
+%
+The \emph{runtime complexity} is defined as follows.
 %
 \begin{definition}[Runtime Complexity]
-The \emph{runtime complexity} is the function $\rc\colon\Sigma\rightarrow\mathbb{N} \cup \{\omega\}$ with
+The \emph{runtime complexity} is the function $\rc\colon\Sigma\rightarrow\N \cup \{\omega\}$ with
 \[
-  \rc(\sigma) = \sup \{k \in \mathbb{N} \mid \text{there exists } c_k \text{ such that } \mathit{entry}(\sigma(x_1), \ldots, \sigma(x_i)) \rightarrow^k c_k \}.
+  \rc(\sigma) = \sup \{k \in \N \mid \exists s' \in \CC.\ \mathit{entry}(x_1, \ldots, x_n)\sigma \rightarrow^k s' \}.
 \]
 \end{definition}
 %
 \noindent
-An integer transition system terminates if all evaluations are finite, i.e., $\rc(\sigma) < \omega$ for all $\sigma\in\Sigma$.
 %
-A function $rb\colon\Sigma\rightarrow\mathbb{N} \cup \{\omega\}$ is called an \emph{upper runtime bound} if $\rc(\sigma) \leq rb(\sigma)$.
+A function $rb\colon\Sigma\rightarrow\N \cup \{\omega\}$ is called an \emph{upper runtime bound} if $\rc(\sigma) \leq rb(\sigma)$ for all $\sigma \in \Sigma$.
 %
-Similarly, a function $lb\colon\Sigma\rightarrow\mathbb{N} \cup \{\omega\}$ is called a \emph{lower runtime bound} if $\rc(\sigma) \geq lb(\sigma)$.
+Similarly, a function $lb\colon\Sigma\rightarrow\N \cup \{\omega\}$ is called a \emph{lower runtime bound} if $\rc(\sigma) \geq lb(\sigma)$ for all $\sigma \in \Sigma$.
 %
 \subsection{Termination}
 %
@@ -133,21 +137,28 @@ where \texttt{LB} represents the lower bound and \texttt{UB} represents the uppe
 %
 The runtime bounds inferred by the tools are compared asymptotically as functions depending on the size of the initial valuation.
 %
-Formally, let $|\sigma| = \max \{ |\sigma(x_j)| \mid 1 \leq j \leq i \}$ denote the largest absolute initial value among all program variables $x_1,\dots,x_i$ of $\mathit{entry}(x_1,\ldots,x_i)$. The variable $n$ in the tool outputs refers to this size measure $|\sigma|$.
+Formally, let $|\sigma| = \max \{ |\sigma(x_j)| \mid 1 \leq i \leq n \}$ denote the largest absolute initial value among all program variables $x_1,\dots,x_n$ of $\mathit{entry}(x_1,\ldots,x_n)$. In the output of the tool, $|\sigma|$ is represented by ``\texttt{n}''.
 %
 For the lower bound \texttt{LB}, the possible outputs and their semantics are:
 \begin{itemize}
-    \item \texttt{Omega(1)}: A constant lower bound, i.e., $lb(\sigma) \in \Omega(1)$.
-    \item \text{\texttt{Omega(n\textasciicircum}$k$\texttt{)}}: A polynomial lower bound of degree $k \in \mathbb{N}_{>0}$, i.e., $lb(\sigma) \in \Omega(n^k)$ where $n = |\sigma|$.
-    \item \texttt{NON\_POLY}: A super-polynomial (e.g., exponential) lower bound.
     \item \texttt{?}: No lower bound could be established.
+    \item \text{\texttt{Omega(n\textasciicircum}$k$\texttt{)}}: A polynomial lower bound of degree $k \in \N$, i.e., $lb(\sigma) \in \Omega(|\sigma|^k)$.
+      %
+      The output \texttt{Omega(n)} is equivalent to \texttt{Omega(n\textasciicircum 1)}.
+      %
+      The output \texttt{Omega(1)} is equivalent to \texttt{?}.
+    \item \texttt{NON\_POLY}: A super-polynomial (e.g., exponential) lower bound.
+    \item \texttt{INF}: An infinite lower bound (for non-terminating ITSs, or terminating ITSs with unbounded runtime)
 \end{itemize}
 %
 Similarly, for the upper bound \texttt{UB}, the possible outputs and their semantics are:
 \begin{itemize}
-    \item \texttt{O(1)}: A constant upper bound, i.e., $rb(\sigma) \in \mathcal{O}(1)$.
-    \item \text{\texttt{O(n\textasciicircum}$k$\texttt{)}}: A polynomial upper bound of degree $k \in \mathbb{N}_{>0}$, i.e., $rb(\sigma) \in \mathcal{O}(n^k)$ where $n = |\sigma|$.
+    \item \texttt{?}: No upper bound could be established.
+    \item \text{\texttt{O(n\textasciicircum}$k$\texttt{)}}: A polynomial upper bound of degree $k \in \N$, i.e., $rb(\sigma) \in \mathcal{O}(|\sigma|^k)$.
+      %
+      The output \texttt{Omega(n)} is equivalent to \texttt{Omega(n\textasciicircum 1)}.
+      %
+      The output \texttt{Omega(1)} is equivalent to \texttt{Omega(n\textasciicircum 0)}.
     \item \texttt{POLY}: A polynomial upper bound of an arbitrary degree, i.e., $rb(\sigma) \in \mathcal{O}(|\sigma|^c)$ for some constant $c$.
     \item \texttt{EXP}: An exponential upper bound.
-    \item \texttt{?}: No upper bound could be established.
 \end{itemize}
