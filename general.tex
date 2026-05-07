@@ -1,0 +1,73 @@
+\chapter{Introduction}
+\chapterauthor{Florian Frohn}
+
+The goal of this document is to serve as the canonical reference for the annual \emph{Termination and Complexity Competition (termCOMP)}.
+%
+Thus, it defines the various formalisms that are used at the competition, and the categories that are run for each formalism.
+%
+Moreover, it defines how to compute the scoring.
+
+For each formalism, it fixes the syntax and semantics (within reason -- it does not provide formal semantics for programming languages like C or Java).
+%
+For each category, it defines the \emph{property} that should be analyzed.
+%
+In most cases, this property is ``termination'', but in some cases, more involved properties like ``almost-sure termination'' of probabilistic programs or ``runtime complexity'' are considered.
+%
+Moreover, for each category, it defines the valid \emph{results} and their order.
+
+\section{Scoring}
+\label{sec:scoring}
+
+\subsection{Valid Results and Conflicts}
+
+Each category must define two sets of valid \emph{results}: One set for proving / over-approximating the property (e.g., YES and MAYBE for termination or valid upper bounds for complexity), and one set for disproving / under-approximating the property (e.g., NO and MAYBE or valid lower bounds).
+%
+Furthermore, a \emph{total order} is required for each of these categories.
+
+For example, we may have $n^0 > n^1 > \ldots$ for upper bounds, where smaller bounds are better, but $n^0 < n^1 < \ldots$ for lower bounds, where larger bounds are better.
+%
+Importantly, the least elements of both orders always obtain score $0$.
+%
+So e.g., for termination, the set of valid answers should be $\{\text{YES}, \text{MAYBE}\}$ and $\{\text{NO}, \text{MAYBE}\}$, with the orders $\text{YES} > \text{MAYBE}$ and $\text{NO} > \text{MAYBE}$, such that the result \text{MAYBE} gets score $0$.
+%
+Invalid outputs are interpreted as the least element of the respective set.
+%
+For each category, the syntax for returning valid results must be specified as well.
+
+Finally, each category specifies which pairs of results are \emph{conflicting}.
+%
+E.g., for termination, YES and NO are conflicting, and for complexity, the lower bound $n^3$ conflicts with the upper bound $n^2$.
+
+\subsection{Computing Scores}
+
+Based on the given ordered sets of valid results $U$ and $L$, the \emph{score} of each tool is computed uniformly across categories as follows.
+
+First, the results provided by the tools are checked for conflicts.
+%
+If there are conflicting results, the authors of the respective tools are asked to resolve the conflict.
+%
+If they fail to do so, the steering committee tries to resolve the conflict.
+%
+If the tool authors / the steering committee concludes that one of the answers is incorrect, then the respective tool gets penalized with the score $-10$, and the incorrect result is disregarded when computing the scores of the other tools (as described below).
+%
+If the conflict cannot be resolved, then the benchmark is excluded from the ranking.
+
+Let $u_0,\ldots,u_n \in U$ with $u_i < u_{i+1}$ and $\ell_0,\ldots,\ell_m \in L$ with $\ell_i < \ell_{i+1}$ be the answers that were returned by the tools (excluding duplicates) plus the least elements of $U$ and $L$ (i.e., $u_0 = \min(U)$ and $\ell_0 = \min(L)$).
+%
+Then each tool that returned the result $u_i$ is awarded $\frac{i}{n}$ points, and each tool that returned the result $\ell_j$ is awarded $\frac{j}{m}$ points.\footnote{If $n$ or $m$ is $0$, then all tools are awarded $0$ points.}
+%
+So the maximal possible score is $2$ (e.g., for providing tight upper and lower bounds like WORST\_CASE(Omega(n), O(n))).
+
+\subsection{Defaults for Scoring}
+
+Unless specified otherwise, the valid results are $U = \{\text{YES}, \text{MAYBE}\}$ and $L = \{\text{NO}, \text{MAYBE}\}$, with the orders $\text{YES} > \text{MAYBE}$ and $\text{NO} > \text{MAYBE}$.
+%
+The only conflicting results are YES and NO.
+%
+So the only possible score for each benchmarks is $1$ (for answering YES or NO) or $0$ (for answering MAYBE).
+%
+The default syntax for results is:
+\[
+  \texttt{YES} \quad | \quad \texttt{NO} \quad | \quad \texttt{MAYBE}
+\]
+
