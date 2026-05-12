@@ -6,6 +6,8 @@
 \usepackage{mathtools}
 \usepackage{microtype}
 \usepackage{stmaryrd}
+\usepackage[most]{tcolorbox}
+\usepackage[dvipsnames]{xcolor}
 
 \theoremstyle{theorem}\newtheorem{theorem}{Theorem}
 \theoremstyle{definition}\newtheorem{example}[theorem]{Example}
@@ -66,12 +68,52 @@
 \usepackage{amsthm}
 \newtheorem{definition}{Definition}
 
+%TRS
+\newcommand{\ito}{\mathrel{\smash{\stackrel{\raisebox{2pt}{$\scriptscriptstyle \mathbf{i}\:$}}{\smash{\rightarrow}}}}}
+\newcommand{\oto}{\mathrel{\smash{\stackrel{\raisebox{2pt}{$\scriptscriptstyle \mathbf{o}\:$}}{\smash{\rightarrow}}}}}
+
 \makeatletter
 \newcommand{\chapterauthor}[1]{%
   {\parindent0pt\vspace*{-25pt}%
   \linespread{1.1}\large\scshape#1%
   \par\nobreak\vspace*{35pt}}
   \@afterheading%
+}
+\renewenvironment{abstract}{%
+  \par\small
+  \begin{quote}
+  \noindent\textbf{Abstract.}~
+}{%
+  \end{quote}
+  \normalsize
+}
+\newenvironment{formalproblem}[4]{%
+  \begin{tcolorbox}[
+    enhanced,
+    breakable,
+    colback=ForestGreen!2!white,
+    colframe=ForestGreen!45!black,
+    colbacktitle=ForestGreen!18!white,
+    coltitle=black,
+    boxrule=0.6pt,
+    arc=2mm,
+    left=1.5mm,
+    right=1.5mm,
+    top=1.2mm,
+    bottom=1.2mm,
+    title={#1},
+    fonttitle=\bfseries,
+    separator sign none
+  ]
+  \textbf{Input:} #2
+
+  \smallskip
+  \textbf{Question:} #3
+
+  \smallskip
+  \textbf{Possible Outputs:} #4
+}{%
+  \end{tcolorbox}
 }
 \makeatother
 
@@ -83,6 +125,7 @@
 
 \tableofcontents
 \input{general}
+\input{trs}
 \input{stcrs}
 \input{its}
 

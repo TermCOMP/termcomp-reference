@@ -58,9 +58,9 @@ Then each tool that returned the result $u_i$ is awarded $\frac{i}{n}$ points, a
 %
 So the maximal possible score is $2$ (e.g., for providing tight upper and lower bounds like WORST\_CASE(Omega(n), O(n))).
 
-\subsection{Defaults for Scoring}
+\subsection{Defaults for Scoring in Termination}
 
-Unless specified otherwise, the valid results are $U = \{\text{YES}, \text{MAYBE}\}$ and $L = \{\text{NO}, \text{MAYBE}\}$, with the orders $\text{YES} > \text{MAYBE}$ and $\text{NO} > \text{MAYBE}$.
+Unless specified otherwise, termination categories use the valid results $U = \{\text{YES}, \text{MAYBE}\}$ and $L = \{\text{NO}, \text{MAYBE}\}$, with the orders $\text{YES} > \text{MAYBE}$ and $\text{NO} > \text{MAYBE}$.
 %
 The only conflicting results are YES and NO.
 %
@@ -70,4 +70,51 @@ The default syntax for results is:
 \[
   \texttt{YES} \quad | \quad \texttt{NO} \quad | \quad \texttt{MAYBE}
 \]
+
+\subsection{Defaults for Scoring in Complexity Analysis}
+
+Unless specified otherwise, complexity categories use the asymptotic classes
+\[
+  \mathcal{C} = \{\mathrm{Pol}_0, \mathrm{Pol}_1, \mathrm{Pol}_2, \ldots, \mathrm{Exp}, \mathrm{DExp}, \mathrm{Fin}, \omega\}
+\]
+Formally, for any function $f : \N \to \N \cup \{\omega\}$, its asymptotic complexity class $\iota(f) \in \mathcal{C}$ is defined by
+\[
+\iota(f) =
+\begin{cases}
+  \mathrm{Pol}_a & \text{if $a \in \N$ is the smallest number with $f(n) \in O(n^a)$,} \\
+  \mathrm{Exp} & \text{if no such $a$ exists,} \\&\text{but there is a polynomial $p(n)$ with $f(n) \in O(2^{p(n)})$,} \\
+  \mathrm{DExp} & \text{if no such polynomial exists,} \\&\text{ but there is a polynomial $p(n)$ with $f(n) \in O(2^{2^{p(n)}})$,} \\
+  \mathrm{Fin} & \text{if no such polynomial exists,} \\&\text{ but there is no $n \in \N$ with $f(n) = \omega$,} \\
+  \omega & \text{if there is an $n \in \N$ with $f(n) = \omega$.}
+\end{cases}
+\]
+Thus, $\mathrm{Pol}_0$ denotes constant complexity, $\mathrm{Pol}_1$ linear complexity, 
+$\mathrm{Pol}_a$ polynomial complexity of degree at most $a$, $\mathrm{Exp}$ single-exponential complexity, 
+$\mathrm{DExp}$ double-exponential complexity, $\mathrm{Fin}$ arbitrary finite complexity 
+beyond the previous classes, and $\omega$ non-termination on at least one input.
+
+The valid scoring results are obtained from these classes by adding the fallback answer \texttt{?} for an unknown complexity.
+\[
+  U = L = \mathcal{C} \cup \{\texttt{?}\}
+\]
+
+For scoring complexity results, upper and lower bounds are ordered in opposite directions.
+The least element is in both cases \texttt{?}.
+For upper bounds, smaller classes are better, so the valid over-approximating results are ordered by
+\[
+  \texttt{?} < \omega < \mathrm{Fin} < \mathrm{DExp} < \mathrm{Exp} < \cdots < \mathrm{Pol}_2 < \mathrm{Pol}_1 < \mathrm{Pol}_0.
+\]
+Thus, a tighter upper bound receives a better score.
+For lower bounds, larger classes are better, so the valid under-approximating results are ordered by
+\[
+  \texttt{?} < \mathrm{Pol}_0 < \mathrm{Pol}_1 < \mathrm{Pol}_2 < \cdots < \mathrm{Exp} < \mathrm{DExp} < \mathrm{Fin} < \omega.
+\]
+Equivalently, stronger lower bounds receive a better score.
+
+The intended default syntax for complexity outputs is: $\texttt{WORST\_CASE(}\ell\texttt{,}u\texttt{)}$,
+where $\ell, u \in \mathcal{C}$ denote the reported lower and upper asymptotic classes.
+
+Two answers conflict if the lower bound is strictly larger than the upper bound of another answer.
+For example, \texttt{WORST\_CASE(}$\mathrm{Pol}_3$\texttt{,}$\mathrm{Pol}_3$\texttt{)} 
+conflicts with \texttt{WORST\_CASE(}$\mathrm{Pol}_0$\texttt{,}$\mathrm{Pol}_2$\texttt{)}.
 
