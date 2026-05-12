@@ -1,0 +1,488 @@
+\chapter{Term Rewrite Systems}
+\chapterauthor{Jan-Christoph Kassing}
+
+\begin{abstract}
+  This chapter describes the syntax and semantics for first-order \emph{Term Rewrite Systems} (TRSs).
+  TRSs are the basic formalism behind several categories of the Termination Competition.
+  In particular, the categories \emph{TRS Standard}, \emph{TRS Innermost}, \emph{TRS Outermost}, \emph{TRS Relative}, 
+  \emph{TRS Derivational Complexity}, \emph{TRS Innermost Derivational Complexity}, \emph{TRS Runtime Complexity}, 
+  and \emph{TRS Innermost Runtime Complexity} all use the same underlying notion of first-order rewriting 
+  and differ only in the allowed rewrite strategy or in the class of start terms that is considered.
+\end{abstract}
+
+\section{Syntax}
+
+\subsection{Grammar}
+
+\begin{tabular}{lll}
+trs & ::= & \texttt{(format TRS)} fun* rule* \\
+fun & ::= & \texttt{(fun} IDENTIFIER NAT\texttt{)} \\
+term & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER term+\texttt{)} \\
+cost & ::= & \texttt{:cost} NAT \\
+rule & ::= & \texttt{(rule} term term cost?\texttt{)} \\
+\end{tabular}
+
+\bigskip
+Additionally, we have NAT $\in \mathbb{N}$ and IDENTIFIER are intended to be valid SMT-LIB symbols.
+In particular, quoted and unquoted identifiers should not be mixed, and reserved words such as 
+\texttt{fun}, \texttt{rule}, \texttt{format}, and \texttt{entrypoint} must not be used as simple identifiers.
+Function symbols are declared by \texttt{(fun f n)}, where \texttt{n} is the arity of \texttt{f}.
+Identifiers that are not declared as function symbols are variables.
+The optional cost annotation is part of the general TRS format, but it is only relevant for categories such as relative rewriting.
+
+\textbf{Example.}
+The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{a}\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(fun a 0)} \\
+\texttt{(rule (f x) a)}
+\end{tabular}
+\end{center}
+The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{f}(x)\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(rule (f x) (f x))}
+\end{tabular}
+\end{center}
+
+\subsection{Restrictions}
+
+The grammar above matches the adapted ARI format used on the Termination Portal.
+Usually, terms and rules should additionally satisfy the following well-formedness conditions.
+
+\begin{enumerate}
+\item Every function symbol is declared exactly once.
+\item Function symbols are always used with their declared arity.
+\item The left-hand side of a rule is not a variable.
+\item Every variable occurring in the right-hand side of a rule also occurs in the corresponding left-hand side.
+\end{enumerate}
+
+In the categories \emph{TRS Standard}, \emph{TRS Innermost}, \emph{TRS Outermost}, \emph{TRS Derivational Complexity}, 
+\emph{TRS Innermost Derivational Complexity}, \emph{TRS Runtime Complexity}, and \emph{TRS Innermost Runtime Complexity}, rule costs are disallowed.
+The category \emph{TRS Relative} uses the same base syntax, but the cost annotations distinguish strict rules from weak rules.
+In such relative rules with cost $0$ we omit the last two well-formedness conditions regarding the variables of rules.
+
+\section{Semantics}
+
+We write $\mathcal{T}(\F,\V)$ for the set of all terms over a signature $\F = \biguplus_{k \in \N} \F_k$ of function symbols and a set $\V$ of variables.
+More precisely, $\mathcal{T}(\F,\V)$ is the smallest set such that $\V \subseteq \mathcal{T}(\F,\V)$ 
+and, whenever $f \in \F_k$ and $t_1,\ldots,t_k \in \mathcal{T}(\F,\V)$, also $f(t_1,\ldots,t_k) \in \mathcal{T}(\F,\V)$.
+If $f \in \F_k$, then we say that $f$ has arity $k$.
+
+A \emph{substitution} is a mapping $\sigma : \V \to \mathcal{T}(\F,\V)$ such that $\sigma(x) = x$ for all but finitely many variables $x \in \V$.
+Substitutions extend homomorphically to terms, i.e., if $t = f(t_1,\ldots,t_k)$, then $t\sigma = f(t_1\sigma,\ldots,t_k\sigma)$.
+
+A \emph{rewrite rule} is a pair of terms $\ell \to r$ such that $\ell \notin \V$ and $\mathit{Var}(r) \subseteq \mathit{Var}(\ell)$.
+A \emph{term rewrite system} is a finite set $\Rules$ of rewrite rules.
+
+\subsection{Positions and Subterms}
+
+Positions are finite sequences of natural numbers, and the empty sequence is denoted by $\varepsilon$.
+For a term $t$, the set of its positions is written $\mathit{Pos}(t)$ and is inductively defined as usual: 
+we have $\varepsilon \in \mathit{Pos}(t)$ and, if $t = f(t_1,\ldots,t_k)$, then $i.p \in \mathit{Pos}(t)$ 
+for every $1 \leq i \leq k$ and every $p \in \mathit{Pos}(t_i)$.
+If $p \in \mathit{Pos}(t)$, then $t|_p$ denotes the subterm of $t$ at position $p$, and $t[s]_p$ denotes the term obtained 
+from $t$ by replacing the subterm $t|_p$ by $s$.
+
+A term $u$ is a \emph{redex} of $\Rules$ if there exist a rule $\ell \to r \in \Rules$ and a substitution $\sigma$ such that $u = \ell\sigma$.
+A term is in \emph{normal form} w.r.t.\ $\Rules$ if it contains no redex.
+
+A \emph{context} is a term with exactly one occurrence of a distinguished hole symbol $\square$.
+If $C$ is a context, then $C[t]$ denotes the term obtained by replacing the hole in $C$ by the term $t$.
+
+\subsection{Full Rewriting}
+
+The TRS $\Rules$ induces a one-step rewrite relation ${\to_\Rules} \subseteq \mathcal{T}(\F,\V) \times \mathcal{T}(\F,\V)$.
+We define $s \to_\Rules t$ if there exist a position $p \in \mathit{Pos}(s)$, 
+a rule $\ell \to r \in \Rules$, and a substitution $\sigma$ 
+such that $s|_p = \ell\sigma$ and $t = s[r\sigma]_p$.
+Its reflexive-transitive closure is denoted by $\to_\Rules^*$.
+
+The TRS $\Rules$ is \emph{terminating} if $\to_\Rules$ is well founded.
+
+\subsection{Innermost and Outermost Rewriting}
+
+An \emph{innermost rewrite step}, written $s \ito_\Rules t$, is a rewrite step $s \to_\Rules t$ at a position $p$ 
+such that all proper subterms of the redex $s|_p$ are in normal form w.r.t.\ $\Rules$.
+
+An \emph{outermost rewrite step}, written $s \oto_{\Rules} t$, is a rewrite step $s \to_\Rules t$ at a position $p$ 
+such that there is no redex at a proper prefix of $p$.
+
+The TRS $\Rules$ is \emph{innermost terminating} if if $\ito_\Rules$ is well founded.
+It is \emph{outermost terminating} if if $\oto_\Rules$ is well founded.
+
+\subsection{Relative Rewriting}
+
+For two TRSs $\Rules$ and $\mathcal{S}$ over the same signature, 
+the \emph{relative rewrite relation} $\to_{\Rules/\mathcal{S}}$ is defined by
+\[
+  \to_{\Rules/\mathcal{S}} \;=\; \to_{\mathcal{S}}^* \cdot \to_{\Rules} \cdot \to_{\mathcal{S}}^* .
+\]
+The pair $\Rules/\mathcal{S}$ is \emph{relatively terminating} if $\to_{\Rules/\mathcal{S}}$ is well founded.
+
+In the competition format, relative rewriting can be represented by rule costs, 
+where strict rules of $\mathcal{R}$ have cost $1$ and weak rules of $\mathcal{S}$ have cost $0$.
+The rules $\ell \to r \in \mathcal{S}$ may ignore the variable conditions 
+$\ell \notin \V$ and $\mathit{Var}(r) \subseteq \mathit{Var}(\ell)$.
+
+\section{Complexity Measures}
+
+There are two standard notions of complexity for term rewriting: \emph{derivational complexity} and \emph{runtime complexity}.
+For any set $M \subseteq \N$, we write $\sup M$ for its least upper bound, with the convention $\sup \emptyset = 0$.
+For a rewrite relation ${\to} \subseteq \mathcal{T}(\F,\V) \times \mathcal{T}(\F,\V)$, 
+the \emph{derivation height} of a term $t$ w.r.t.\ $\to$ is
+\[
+  \mathit{dh}_{\to}(t) = \sup\{ m \in \N \mid \exists t' \in \mathcal{T}(\F,\V) : t \to^{m} t' \}.
+\]
+Thus, $\mathit{dh}_{\to}(t)$ is the length of the longest $\to$-rewrite sequence starting with $t$.
+We measure the \emph{size} $|t|$ of a term $t$ 
+by the number of occurrences of function symbols and variables in $t$,
+i.e., $|x| = 1$ for variables $x \in \V$ and
+\[
+  |f(t_1,\ldots,t_k)| = 1 + \sum_{i=1}^{k} |t_i|.
+\]
+
+\subsection{Derivational Complexity}
+
+The \emph{derivational complexity} of a rewrite relation $\to$ is the function
+\[
+  \mathit{dc}_{\to}(n) = \sup\{ \mathit{dh}_{\to}(t) \mid t \in \mathcal{T}(\F,\V),\ |t| \leq n \}.
+\]
+Hence, $\mathit{dc}_{\to}(n)$ is the maximal length of a $\to$-rewrite sequence 
+starting with an arbitrary term of size at most $n$.
+
+For the TRS $\Rules$, its full derivational complexity is $\mathit{dc}_{\to_\Rules}$.
+Analogously, the \emph{innermost derivational complexity} of $\Rules$ is obtained 
+by replacing $\to_\Rules$ with $\ito_\Rules$.
+
+\subsection{Runtime Complexity}
+
+In contrast, runtime complexity restricts the start terms to \emph{basic terms}.
+To this end, we decompose the signature as $\F = \mathcal{C} \uplus \mathcal{D}$, 
+where $f \in \mathcal{D}$ if $f$ occurs at the root of the left-hand side of some rule in $\Rules$.
+The symbols in $\mathcal{C}$ and $\mathcal{D}$ are called \emph{constructors} and \emph{defined symbols}, respectively.
+
+A term $t \in \mathcal{T}(\F,\V)$ is \emph{basic} if $t = f(t_1,\ldots,t_k)$ 
+for some defined symbol $f \in \mathcal{D}$ and constructor terms $t_1,\ldots,t_k \in \mathcal{T}(\mathcal{C},\V)$.
+We write $\mathcal{T}_{\mathit{B}}^{\mathcal{R}}$ for the set of all basic terms w.r.t.\ $\mathcal{R}$.
+
+The \emph{runtime complexity} of a rewrite relation $\to$ w.r.t.\ $\Rules$ is the function
+\[
+  \mathit{rc}_{\to,\Rules}(n) = \sup\{ \mathit{dh}_{\to}(t) \mid t \in \mathcal{T}_{\mathit{B}}^{\mathcal{R}},\ |t| \leq n \}.
+\]
+Thus, runtime complexity measures the maximal length of a rewrite sequence starting with a basic term of size at most $n$.
+For the TRS $\Rules$, its full runtime complexity is $\mathit{rc}_{\to_\Rules,\Rules}$, 
+and its \emph{innermost runtime complexity} is defined analogously using $\ito_\Rules$ instead of $\to_\Rules$.
+
+\section{Competition Categories}
+
+The TRS formalism from this chapter is used directly by the following categories.
+
+\subsection{TRS Standard}
+
+\textbf{Motivation.}
+This is the basic termination problem for unrestricted first-order rewriting.
+Many other rewriting categories are refinements or extensions of this setting, so it serves as a common baseline for termination techniques.
+
+\begin{formalproblem}
+  {Formal Problem Description}
+  {A TRS $\Rules$}
+  {Does $\Rules$ terminate?}
+  {$\texttt{YES} \quad | \quad \texttt{NO} \quad | \quad \texttt{MAYBE}$}
+\end{formalproblem}
+
+\textbf{Example.}
+The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{a}\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(fun a 0)} \\
+\texttt{(rule (f x) a)}
+\end{tabular}
+\end{center}
+Note that $\mathcal{R}$ is terminating, and thus, the expected output should be \texttt{YES}.
+The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{f}(x)\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(rule (f x) (f x))}
+\end{tabular}
+\end{center}
+Note that $\mathcal{R}$ is not terminating, and thus, the expected output should be \texttt{NO}.
+
+\subsection{TRS Relative}
+
+\textbf{Motivation.}
+Relative termination isolates the rules whose repeated use should be ruled out while allowing auxiliary rules to be used freely in between.
+This is useful for modular proofs and transformations that reduce a problem to showing that a strict part terminates relative to a weak part.
+
+\begin{formalproblem}
+  {Formal Problem Description}
+  {A relative TRS $\Rules/\mathcal{S}$}
+  {Is $\Rules/\mathcal{S}$ relatively terminating?}
+  {$\texttt{YES} \quad | \quad \texttt{NO} \quad | \quad \texttt{MAYBE}$}
+\end{formalproblem}
+\textbf{Example.}
+The relative TRS $\mathcal{R}/\mathcal{S}$ with strict part $\mathcal{R} = \{\mathsf{a} \to \mathsf{b}\}$ 
+and weak part $\mathcal{S} = \{\mathsf{b} \to \mathsf{b}\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun a 0)} \\
+\texttt{(fun b 0)} \\
+\texttt{(rule a b :cost 1)} \\
+\texttt{(rule b b :cost 0)}
+\end{tabular}
+\end{center}
+There is at most one strict step, and thus, the expected output should be \texttt{YES}.
+The relative TRS $\mathcal{R}/\mathcal{S}$ with strict part $\mathcal{R} = \{\mathsf{a} \to \mathsf{b}\}$ 
+and weak part $\mathcal{S} = \{\mathsf{b} \to \mathsf{a}\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun a 0)} \\
+\texttt{(fun b 0)} \\
+\texttt{(rule a b :cost 1)} \\
+\texttt{(rule b a :cost 0)}
+\end{tabular}
+\end{center}
+It yields an infinite sequence using the strict rule infinitely often, and thus, the expected output should be \texttt{NO}.
+
+\subsection{TRS Innermost}
+
+\textbf{Motivation.}
+This category studies termination under innermost rewriting, which closely corresponds to call-by-value evaluation.
+Since many programming languages evaluate arguments before calling a function, 
+innermost termination is an especially important restricted strategy.
+
+\begin{formalproblem}
+  {Formal Problem Description}
+  {A TRS $\Rules$}
+  {Does $\Rules$ innermost terminate?}
+  {$\texttt{YES} \quad | \quad \texttt{NO} \quad | \quad \texttt{MAYBE}$}
+\end{formalproblem}
+
+\textbf{Example.}
+The TRS $\mathcal{R} = \{\mathsf{f}(x) \to x\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(fun a 0)} \\
+\texttt{(rule (f x) x)}
+\end{tabular}
+\end{center}
+Every innermost step strictly decreases the term size, and thus, the expected output should be \texttt{YES}.
+The TRS $\mathcal{R} = \{\mathsf{g}(x) \to \mathsf{g}(x)\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun g 1)} \\
+\texttt{(rule (g x) (g x))}
+\end{tabular}
+\end{center}
+Note that $\mathcal{R}$ is not innermost terminating since $\mathsf{g}(x)$ rewrites to itself by an innermost step, 
+and thus, the expected output should be \texttt{NO}.
+
+\subsection{TRS Outermost}
+
+\textbf{Motivation.}
+This category studies termination under outermost rewriting, 
+which is closely related to call-by-name or lazy evaluation.
+Although more restrictive than full rewriting, this strategy is important for languages 
+and semantics that evaluate the outermost call first.
+
+\begin{formalproblem}
+  {Formal Problem Description}
+  {A TRS $\Rules$}
+  {Does $\Rules$ outermost terminate?}
+  {$\texttt{YES} \quad | \quad \texttt{NO} \quad | \quad \texttt{MAYBE}$}
+\end{formalproblem}
+
+\textbf{Example.}
+The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{a}\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(fun a 0)} \\
+\texttt{(rule (f x) a)}
+\end{tabular}
+\end{center}
+Every outermost redex reduces to the normal form $\mathsf{a}$, and thus, the expected output should be \texttt{YES}.
+The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{f}(x)\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(rule (f x) (f x))}
+\end{tabular}
+\end{center}
+Note that $\mathcal{R}$ is not outermost terminating since the outermost redex rewrites to itself forever, and thus, the expected output should be \texttt{NO}.
+
+\subsection{TRS Derivational Complexity}
+
+\textbf{Motivation.}
+This category asks not only whether rewriting terminates, 
+but how long rewrite sequences can become as a function of the input size.
+It measures the worst-case asymptotic complexity of unrestricted rewriting on arbitrary start terms.
+
+\begin{formalproblem}
+  {Formal Problem Description}
+  {A TRS $\Rules$}
+  {What is the asymptotic derivational complexity of $\Rules$?}
+  {\texttt{WORST\_CASE(}$\ell\texttt{,}$u\texttt{)}, where}
+  \[
+    \ell,u \in \{\mathrm{Pol}_0, \mathrm{Pol}_1, \mathrm{Pol}_2, \ldots, \mathrm{Exp}, \mathrm{DExp}, \omega\}
+  \]
+\end{formalproblem}
+
+\textbf{Example.}
+The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{a}\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(fun a 0)} \\
+\texttt{(rule (f x) a)}
+\end{tabular}
+\end{center}
+Here, a rewrite sequence starting with $\mathsf{f}^n(x)$ has length $n$ in the worst-case, 
+so the derivational complexity has class $\mathrm{Pol}_1$, and the expected output can be \texttt{WORST\_CASE(}$\mathrm{Pol}_1$\texttt{,}$\mathrm{Pol}_1$\texttt{)}.
+The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{f}(x)\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(rule (f x) (f x))}
+\end{tabular}
+\end{center}
+For this system, derivation heights are infinite, so the derivational complexity has class $\omega$, and the expected output can be \texttt{WORST\_CASE(}$\omega$\texttt{,}$\omega$\texttt{)}.
+
+\subsection{TRS Innermost Derivational Complexity}
+
+\textbf{Motivation.}
+This category measures the asymptotic complexity of a TRS 
+when only innermost rewrite sequences are considered.
+It is especially relevant when the intended execution model follows call-by-value evaluation.
+
+\begin{formalproblem}
+  {Formal Problem Description}
+  {A TRS $\Rules$}
+  {What is the asymptotic innermost derivational complexity of $\Rules$?}
+  {\texttt{WORST\_CASE(}$\ell\texttt{,}$u\texttt{)}, where}
+  \[
+    \ell,u \in \{\mathrm{Pol}_0, \mathrm{Pol}_1, \mathrm{Pol}_2, \ldots, \mathrm{Exp}, \mathrm{DExp}, \omega\}
+  \]
+\end{formalproblem}
+
+\textbf{Example.}
+The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{a}\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(fun a 0)} \\
+\texttt{(rule (f x) a)}
+\end{tabular}
+\end{center}
+Again, an innermost rewrite sequence starting with $\mathsf{f}^n(x)$ has length $n$ in the worst-case, so the innermost derivational complexity has class $\mathrm{Pol}_1$, and the expected output can be \texttt{WORST\_CASE(}$\mathrm{Pol}_1$\texttt{,}$\mathrm{Pol}_1$\texttt{)}.
+The TRS $\mathcal{R} = \{\mathsf{g}(x) \to \mathsf{g}(x)\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun g 1)} \\
+\texttt{(rule (g x) (g x))}
+\end{tabular}
+\end{center}
+For this system, innermost derivation heights are infinite, so the innermost derivational complexity has class $\omega$, and the expected output can be \texttt{WORST\_CASE(}$\omega$\texttt{,}$\omega$\texttt{)}.
+
+\subsection{TRS Runtime Complexity}
+
+\textbf{Motivation.}
+Runtime complexity focuses on terms that represent an algorithm symbol applied to already constructed input data.
+This better matches the usual notion of program runtime than derivational complexity on arbitrary terms.
+
+\begin{formalproblem}
+  {Formal Problem Description}
+  {A TRS $\Rules$}
+  {What is the asymptotic runtime complexity of $\Rules$?}
+  {\texttt{WORST\_CASE(}$\ell\texttt{,}$u\texttt{)}, where}
+  \[
+    \ell,u \in \{\mathrm{Pol}_0, \mathrm{Pol}_1, \mathrm{Pol}_2, \ldots, \mathrm{Exp}, \mathrm{DExp}, \omega\}
+  \]
+\end{formalproblem}
+
+\textbf{Example.}
+The TRS $\mathcal{R} = \{\mathsf{f}(\mathsf{z}) \to \mathsf{z},\; \mathsf{f}(\mathsf{s}(x)) \to \mathsf{f}(x)\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(fun s 1)} \\
+\texttt{(fun z 0)} \\
+\texttt{(rule (f z) z)} \\
+\texttt{(rule (f (s x)) (f x))}
+\end{tabular}
+\end{center}
+Starting from a basic term of the form $\mathsf{f}(\mathsf{s}^n(\mathsf{z}))$, 
+the number of steps is linear in the input size, so the runtime complexity has class $\mathrm{Pol}_1$, 
+and the expected output can be \texttt{WORST\_CASE(}$\mathrm{Pol}_1$\texttt{,}$\mathrm{Pol}_1$\texttt{)}.
+The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{f}(x)\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(rule (f x) (f x))}
+\end{tabular}
+\end{center}
+Since $\mathsf{f}(c)$ is a basic term for every constructor term $c$,
+the runtime complexity has class $\omega$, 
+and the expected output can be \texttt{WORST\_CASE(}$\omega$\texttt{,}$\omega$\texttt{)}.
+
+\subsection{TRS Innermost Runtime Complexity}
+
+\textbf{Motivation.}
+This category combines the restriction to basic start terms with the restriction to innermost rewriting.
+It captures the asymptotic cost of call-by-value computations on TRSs that represent algorithms on fixed input data.
+
+\begin{formalproblem}
+  {Formal Problem Description}
+  {A TRS $\Rules$}
+  {What is the asymptotic innermost runtime complexity of $\Rules$?}
+  {\texttt{WORST\_CASE(}$\ell\texttt{,}$u\texttt{)}, where}
+  \[
+    \ell,u \in \{\mathrm{Pol}_0, \mathrm{Pol}_1, \mathrm{Pol}_2, \ldots, \mathrm{Exp}, \mathrm{DExp}, \omega\}
+  \]
+\end{formalproblem}
+
+\textbf{Example.}
+The TRS $\mathcal{R} = \{\mathsf{f}(\mathsf{z}) \to \mathsf{z},\; \mathsf{f}(\mathsf{s}(x)) \to \mathsf{f}(x)\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(fun s 1)} \\
+\texttt{(fun z 0)} \\
+\texttt{(rule (f z) z)} \\
+\texttt{(rule (f (s x)) (f x))}
+\end{tabular}
+\end{center}
+On basic terms of the form $\mathsf{f}(\mathsf{s}^n(\mathsf{z}))$, 
+each innermost step removes one constructor $\mathsf{s}$, so the innermost runtime complexity has class $\mathrm{Pol}_1$, 
+and the expected output can be \texttt{WORST\_CASE(}$\mathrm{Pol}_1$\texttt{,}$\mathrm{Pol}_1$\texttt{)}.
+The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{f}(x)\}$ has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format TRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(rule (f x) (f x))}
+\end{tabular}
+\end{center}
+Note that every basic term rooted by $\mathsf{f}$ rewrites to itself by an innermost step, so the innermost runtime complexity has class $\omega$ and the expected output can be \texttt{WORST\_CASE(}$\omega$\texttt{,}$\omega$\texttt{)}.
