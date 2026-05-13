@@ -98,7 +98,7 @@ An \emph{evaluation} is a sequence
   \mathit{entry}(c_1,\ldots,c_n) \to s_1 \to \ldots \to s_k.
 \]
 %
-An ITS terminates if all evaluations are finite.
+An ITS \emph{terminates} if all evaluations are finite.
 %
 The \emph{runtime complexity} is defined as follows.
 %
@@ -137,12 +137,16 @@ where \texttt{LB} represents the lower bound and \texttt{UB} represents the uppe
 %
 The runtime bounds inferred by the tools are compared asymptotically as functions depending on the size of the initial valuation.
 %
-Formally, let $|\sigma| = \max \{ |\sigma(x_j)| \mid 1 \leq i \leq n \}$ denote the largest absolute initial value among all program variables $x_1,\dots,x_n$ of $\mathit{entry}(x_1,\ldots,x_n)$. In the output of the tool, $|\sigma|$ is represented by ``\texttt{n}''.
+Formally, let $||\sigma||_{\infty} = \max \{ |\sigma(x_j)| \mid 1 \leq i \leq n \}$ denote the maximums norm of the state $\sigma\in\Sigma$, i.e., the largest absolute initial value among all program variables $x_1,\dots,x_n$ of $\mathit{entry}(x_1,\ldots,x_n)$.
+%
+Note that Boolean values $\bot$ and $\top$ are considered as integer values $0$ and $1$, respectively.
+%
+In the output of the tool, $||\sigma||_{\infty}$ is represented by ``\texttt{n}''.
 %
 For the lower bound \texttt{LB}, the possible outputs and their semantics are:
 \begin{itemize}
     \item \texttt{?}: No lower bound could be established.
-    \item \text{\texttt{Omega(n\textasciicircum}$k$\texttt{)}}: A polynomial lower bound of degree $k \in \N$, i.e., $rc(\sigma) \in \Omega(|\sigma|^k)$.
+    \item \text{\texttt{Omega(n\textasciicircum}$k$\texttt{)}}: A polynomial lower bound of degree $k \in \N$, i.e., $rc(\sigma) \in \Omega(||\sigma||_{\infty}^k)$.
       %
       \begin{itemize}
       \item The output \texttt{Omega(n)} is equivalent to \texttt{Omega(n\textasciicircum 1)}.
@@ -155,10 +159,10 @@ For the lower bound \texttt{LB}, the possible outputs and their semantics are:
 Similarly, for the upper bound \texttt{UB}, the possible outputs and their semantics are:
 \begin{itemize}
     \item \texttt{?}: No upper bound could be established.
-    \item \text{\texttt{O(n\textasciicircum}$k$\texttt{)}}: A polynomial upper bound of degree $k \in \N$, i.e., $rc(\sigma) \in \mathcal{O}(|\sigma|^k)$.
+    \item \text{\texttt{O(n\textasciicircum}$k$\texttt{)}}: A polynomial upper bound of degree $k \in \N$, i.e., $rc(\sigma) \in \mathcal{O}(||\sigma||_{\infty}^k)$.
       \begin{itemize}
-      \item The output \texttt{Omega(n)} is equivalent to \texttt{Omega(n\textasciicircum 1)}.
-      \item The output \texttt{Omega(1)} is equivalent to \texttt{Omega(n\textasciicircum 0)}.
+      \item The output \texttt{O(n)} is equivalent to \texttt{O(n\textasciicircum 1)}.
+      \item The output \texttt{O(1)} is equivalent to \texttt{O(n\textasciicircum 0)}.
       \end{itemize}
-    \item \texttt{FINITE}: A finite lower bound.
+    \item \texttt{FINITE}: A finite upper bound, e.g., exponential or super-exponential.
 \end{itemize}
