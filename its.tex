@@ -79,9 +79,7 @@ A \emph{configuration} is a term $f(c_1,\ldots,c_n)$ where $f \in \F$ and $c_1,\
 %
 $\CC$ is the set of all configurations.
 %
-A \emph{valuation} is a mapping $\sigma: \V \to \Z \cup \B$ (where $\B = \{\top,\bot\}$ denotes the Booleans) that respects the types of variables (i.e., variables of type \texttt{Int} are mapped to $\Z$, and variables of type \texttt{Bool} are mapped to $\B$).
-%
-The set of all valuations is denoted by $\Sigma$.
+A \emph{valuation} is a mapping $\sigma: \V \to \Z$ and the set of all valuations is denoted by $\Sigma$.
 %
 $\Rules$ induces a rewrite relation on configurations as follows:
 %
@@ -137,9 +135,7 @@ where \texttt{LB} represents the lower bound and \texttt{UB} represents the uppe
 %
 The runtime bounds inferred by the tools are compared asymptotically as functions depending on the size of the initial valuation.
 %
-Formally, let $||\sigma||_{\infty} = \max \{ |\sigma(x_j)| \mid 1 \leq i \leq n \}$ denote the maximums norm of the state $\sigma\in\Sigma$, i.e., the largest absolute initial value among all program variables $x_1,\dots,x_n$ of $\mathit{entry}(x_1,\ldots,x_n)$.
-%
-Note that Boolean values $\bot$ and $\top$ are considered as integer values $0$ and $1$, respectively.
+Formally, let $||\sigma||_{\infty} = \max \{ |\sigma(x_j)| \mid 1 \leq i \leq n \}$ denote the maximum norm of the state $\sigma\in\Sigma$, i.e., the largest absolute initial value among all program variables $x_1,\dots,x_n$ of $\mathit{entry}(x_1,\ldots,x_n)$.
 %
 In the output of the tool, $||\sigma||_{\infty}$ is represented by ``\texttt{n}''.
 %
