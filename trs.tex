@@ -1,4 +1,4 @@
-\chapter{Term Rewrite Systems}
+\chapter{Term Rewrite Systems}\label{chap:TRS}
 \chapterauthor{Jan-Christoph Kassing}
 
 \begin{abstract}
@@ -7,20 +7,22 @@
   In particular, the categories \emph{TRS Standard}, \emph{TRS Innermost}, \emph{TRS Outermost}, \emph{TRS Relative}, 
   \emph{TRS Derivational Complexity}, \emph{TRS Innermost Derivational Complexity}, \emph{TRS Runtime Complexity}, 
   and \emph{TRS Innermost Runtime Complexity} all use the same underlying notion of first-order rewriting 
-  and differ only in the allowed rewrite strategy or in the class of start terms that is considered.
+  and differ only in the allowed rewrite strategy, in the class of start terms that is considered, or in allowing weak rules that can be used arbitrarily.
 \end{abstract}
 
 \section{Syntax}
 
-\subsection{Grammar}
+Term rewrite systems have the following syntax.
 
-\begin{tabular}{lll}
-trs & ::= & \texttt{(format TRS)} fun* rule* \\
-fun & ::= & \texttt{(fun} IDENTIFIER NAT\texttt{)} \\
-term & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER term+\texttt{)} \\
-cost & ::= & \texttt{:cost} NAT \\
-rule & ::= & \texttt{(rule} term term cost?\texttt{)} \\
-\end{tabular}
+\begin{grammar}{TRS Syntax}
+  \begin{tabular}{lll}
+  trs & ::= & \texttt{(format TRS)} fun* rule* \\
+  fun & ::= & \texttt{(fun} IDENTIFIER NAT\texttt{)} \\
+  term & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER term+\texttt{)} \\
+  cost & ::= & \texttt{:cost} NAT \\
+  rule & ::= & \texttt{(rule} term term cost?\texttt{)} \\
+  \end{tabular}
+\end{grammar}
 
 \bigskip
 Additionally, we have NAT $\in \mathbb{N}$ and IDENTIFIER are intended to be valid SMT-LIB symbols.
@@ -28,7 +30,8 @@ In particular, quoted and unquoted identifiers should not be mixed, and reserved
 \texttt{fun}, \texttt{rule}, and \texttt{format} must not be used as identifiers.
 Function symbols are declared by \texttt{(fun f n)}, where \texttt{n} is the arity of \texttt{f}.
 Identifiers that are not declared as function symbols are variables.
-The optional cost annotation is part of the general TRS format, but it is only relevant for categories such as relative rewriting.
+The optional cost annotation is part of the general TRS format, 
+but it is currently only relevant for relative rewriting.
 
 \textbf{Example.}
 The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{a}\}$ has the following input syntax:
@@ -63,7 +66,8 @@ More precisely, $\mathcal{T}(\F,\V)$ is the smallest set such that $\V \subseteq
 and, whenever $f \in \F_k$ and $t_1,\ldots,t_k \in \mathcal{T}(\F,\V)$, also $f(t_1,\ldots,t_k) \in \mathcal{T}(\F,\V)$.
 If $f \in \F_k$, then we say that $f$ has arity $k$.
 For example, $\F = \F_0 \uplus \F_1 \uplus \F_2 = \{\mathsf{z}\} \uplus \{\mathsf{s}\} \uplus \{\mathsf{plus}\}$.
-Then $\mathsf{plus}(\mathsf{s}(\mathsf{z}),y)$ and $\mathsf{s}(y)$ are terms in $\mathcal{T}(\F,\V)$, whereas $\mathsf{plus}(\mathsf{z})$ is not, since $\mathsf{plus}$ has arity $2$.
+Then $\mathsf{plus}(\mathsf{s}(\mathsf{z}),y)$ and $\mathsf{s}(y)$ are terms in $\mathcal{T}(\F,\V)$,
+whereas $\mathsf{plus}(\mathsf{z})$ is not, since $\mathsf{plus}$ has arity $2$.
 
 A \emph{substitution} is a mapping $\sigma : \V \to \mathcal{T}(\F,\V)$ such that $\sigma(x) = x$ for all but finitely many variables $x \in \V$.
 Substitutions extend homomorphically to terms, i.e., if $t = f(t_1,\ldots,t_k)$, then $t\sigma = f(t_1\sigma,\ldots,t_k\sigma)$.
@@ -85,7 +89,8 @@ we have $\varepsilon \in \mathit{Pos}(t)$ and, if $t = f(t_1,\ldots,t_k)$, then 
 for every $1 \leq i \leq k$ and every $p \in \mathit{Pos}(t_i)$.
 If $p \in \mathit{Pos}(t)$, then $t|_p$ denotes the subterm of $t$ at position $p$, and $t[s]_p$ denotes the term obtained 
 from $t$ by replacing the subterm $t|_p$ by $s$.
-For example, for $t = \mathsf{plus}(\mathsf{s}(\mathsf{z}),y)$ we have $t|_1 = \mathsf{s}(\mathsf{z})$, $t|_{1.1} = \mathsf{z}$, and $t[\mathsf{s}(y)]_2 = \mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(y))$.
+For example, for $t = \mathsf{plus}(\mathsf{s}(\mathsf{z}),y)$ we have 
+$t|_1 = \mathsf{s}(\mathsf{z})$, $t|_{1.1} = \mathsf{z}$, and $t[\mathsf{s}(y)]_2 = \mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(y))$.
 
 A term $u$ is a \emph{redex} w.r.t.\ $\Rules$ if there exist a rule $\ell \to r \in \Rules$ and a substitution $\sigma$ such that $u = \ell\sigma$.
 A term is in \emph{normal form} w.r.t.\ $\Rules$ if it contains no redex as subterm.
@@ -94,7 +99,8 @@ $\sigma(x) = \mathsf{z}$ and $\sigma(y) = \mathsf{z}$, while $\mathsf{s}(\mathsf
 
 A \emph{context} is a term with exactly one occurrence of a distinguished hole symbol $\square$.
 If $C$ is a context, then $C[t]$ denotes the term obtained by replacing the hole in $C$ by the term $t$.
-For example, if $C = \mathsf{plus}(\mathsf{s}(\mathsf{z}),\square)$, then $C[\mathsf{plus}(\mathsf{z},\mathsf{z})] = \mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{plus}(\mathsf{z},\mathsf{z}))$.
+For example, if $C = \mathsf{plus}(\mathsf{s}(\mathsf{z}),\square)$, 
+then $C[\mathsf{plus}(\mathsf{z},\mathsf{z})] = \mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{plus}(\mathsf{z},\mathsf{z}))$.
 
 \subsection{Full Rewriting}
 
@@ -103,26 +109,32 @@ We define $s \to_\Rules t$ if there exist a position $p \in \mathit{Pos}(s)$,
 a rule $\ell \to r \in \Rules$, and a substitution $\sigma$ 
 such that $s|_p = \ell\sigma$ and $t = s[r\sigma]_p$.
 Its reflexive-transitive closure is denoted by $\to_\Rules^*$.
-For example, $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(\mathsf{z})) \to_{\Rules_{\mathsf{plus}}} \mathsf{s}(\mathsf{plus}(\mathsf{z},\mathsf{s}(\mathsf{z}))) \to_{\Rules_{\mathsf{plus}}} \mathsf{s}(\mathsf{s}(\mathsf{z}))$.
+For example, $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(\mathsf{z})) 
+\to_{\Rules_{\mathsf{plus}}} \mathsf{s}(\mathsf{plus}(\mathsf{z},\mathsf{s}(\mathsf{z}))) 
+\to_{\Rules_{\mathsf{plus}}} \mathsf{s}(\mathsf{s}(\mathsf{z}))$.
 
 The TRS $\Rules$ is \emph{terminating} if $\to_\Rules$ is well founded.
-For example, $\Rules_{\mathsf{plus}}$ is terminating because every application of the recursive rule decreases the number of outermost $\mathsf{s}$ symbols in the first argument of $\mathsf{plus}$.
+For example, $\Rules_{\mathsf{plus}}$ is terminating because every application of 
+the recursive rule decreases the number of outermost $\mathsf{s}$ symbols in the first argument of $\mathsf{plus}$.
 
 \subsection{Innermost and Outermost Rewriting}
 
 An \emph{innermost rewrite step}, written $s \ito_\Rules t$, is a rewrite step $s \to_\Rules t$ at a position $p$ 
 such that all proper subterms of the redex $s|_p$ are in normal form w.r.t.\ $\Rules$.
-For example, $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{plus}(\mathsf{z},\mathsf{z})) \ito_{\Rules_{\mathsf{plus}}} \mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z})$
+For example, $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{plus}(\mathsf{z},\mathsf{z})) 
+\ito_{\Rules_{\mathsf{plus}}} \mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z})$
 is an innermost step at position $2$, since the subterms of the redex $\mathsf{plus}(\mathsf{z},\mathsf{z})$ are already in normal form.
 
 An \emph{outermost rewrite step}, written $s \oto_{\Rules} t$, is a rewrite step $s \to_\Rules t$ at a position $p$ 
 such that there is no redex at a proper prefix of $p$.
-For the same term we have $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{plus}(\mathsf{z},\mathsf{z})) \oto_{\Rules_{\mathsf{plus}}} \mathsf{s}(\mathsf{plus}(\mathsf{z},\mathsf{plus}(\mathsf{z},\mathsf{z})))$
+For the same term we have $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{plus}(\mathsf{z},\mathsf{z})) 
+\oto_{\Rules_{\mathsf{plus}}} \mathsf{s}(\mathsf{plus}(\mathsf{z},\mathsf{plus}(\mathsf{z},\mathsf{z})))$
 at the root position $\varepsilon$, so this step is outermost.
 
-The TRS $\Rules$ is \emph{innermost terminating} if if $\ito_\Rules$ is well founded.
-It is \emph{outermost terminating} if if $\oto_\Rules$ is well founded.
-For example, $\Rules_{\mathsf{plus}}$ is both innermost terminating and outermost terminating, since every innermost or outermost use of the recursive rule still decreases the first argument of $\mathsf{plus}$.
+The TRS $\Rules$ is \emph{innermost terminating} if $\ito_\Rules$ is well founded.
+It is \emph{outermost terminating} if $\oto_\Rules$ is well founded.
+For example, $\Rules_{\mathsf{plus}}$ is both innermost terminating and outermost terminating, 
+since every innermost or outermost use of the recursive rule still decreases the first argument of $\mathsf{plus}$.
 
 \subsection{Relative Rewriting}
 
@@ -139,7 +151,9 @@ For example, let
   \mathcal{S} = \{\mathsf{plus}(\mathsf{z}, y) \to y\}.
 \]
 Then $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z}) \to_{\Rules/\mathcal{S}} \mathsf{s}(\mathsf{z})$
-because we first take the strict step to $\mathsf{s}(\mathsf{plus}(\mathsf{z},\mathsf{z}))$ and then contract the weak redex inside. Moreover, $\Rules/\mathcal{S}$ is relatively terminating because each strict step decreases the first argument of $\mathsf{plus}$.
+because we first take the strict step to $\mathsf{s}(\mathsf{plus}(\mathsf{z},\mathsf{z}))$ 
+and then reduce the weak redex inside. 
+Moreover, $\Rules/\mathcal{S}$ is relatively terminating because each strict step decreases the first argument of $\mathsf{plus}$.
 
 In the competition format, relative rewriting can be represented by rule costs, 
 where strict rules of $\mathcal{R}$ have cost $1$ and weak rules of $\mathcal{S}$ have cost $0$.
@@ -157,11 +171,15 @@ Thus, $\mathit{dh}_{\to}(t)$ is the length of the longest $\to$-rewrite sequence
 For example, with $\Rules_{\mathsf{plus}}$ we have
 $\mathit{dh}_{\to_{\Rules_{\mathsf{plus}}}}(\mathsf{plus}(\mathsf{s}(\mathsf{s}(\mathsf{z})),\mathsf{z})) = 3$,
 since
-$\mathsf{plus}(\mathsf{s}(\mathsf{s}(\mathsf{z})),\mathsf{z}) \to \mathsf{s}(\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z})) \to \mathsf{s}(\mathsf{s}(\mathsf{plus}(\mathsf{z},\mathsf{z}))) \to \mathsf{s}(\mathsf{s}(\mathsf{z}))$.
+$\mathsf{plus}(\mathsf{s}(\mathsf{s}(\mathsf{z})),\mathsf{z}) 
+\to_{\Rules_{\mathsf{plus}}} \mathsf{s}(\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z})) 
+\to_{\Rules_{\mathsf{plus}}} \mathsf{s}(\mathsf{s}(\mathsf{plus}(\mathsf{z},\mathsf{z}))) 
+\to_{\Rules_{\mathsf{plus}}} \mathsf{s}(\mathsf{s}(\mathsf{z}))$.
 We measure the \emph{size} $|t|$ of a term $t$ 
 by the number of occurrences of function symbols and variables in $t$,
 i.e., $|x| = 1$ for variables $x \in \V$ and $|f(t_1,\ldots,t_k)| = 1 + \sum_{i=1}^{k} |t_i|$.
-For example, $|\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(\mathsf{z}))| = 1 + |\mathsf{s}(\mathsf{z})| + |\mathsf{s}(\mathsf{z})| = 1 + 2 + 2 = 5$.
+For example, $|\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(\mathsf{z}))| 
+= 1 + |\mathsf{s}(\mathsf{z})| + |\mathsf{s}(\mathsf{z})| = 1 + 2 + 2 = 5$.
 
 \subsection{Derivational Complexity}
 
@@ -171,12 +189,15 @@ The \emph{derivational complexity} of a rewrite relation $\to$ is the function
 \]
 Hence, $\mathit{dc}_{\to}(n)$ is the maximal length of a $\to$-rewrite sequence 
 starting with an arbitrary term of size at most $n$.
-For example, the term $\mathsf{plus}(\mathsf{s}^n(\mathsf{z}),\mathsf{z})$ has size $n+2$ and rewrites in exactly $n+1$ steps to $\mathsf{s}^n(\mathsf{z})$, so $\mathit{dc}_{\to_{\Rules_{\mathsf{plus}}}}$ grows at least linearly.
+For example, the term $\mathsf{plus}(\mathsf{s}^n(\mathsf{z}),\mathsf{z})$ has size $n+2$ 
+and rewrites in exactly $n+1$ steps to $\mathsf{s}^n(\mathsf{z})$, 
+so $\mathit{dc}_{\to_{\Rules_{\mathsf{plus}}}}$ grows at least linearly.
 
 For the TRS $\Rules$, its full derivational complexity is $\mathit{dc}_{\to_\Rules}$.
 Analogously, the \emph{innermost derivational complexity} $\mathit{dc}_{\ito_\Rules}$ of $\Rules$ is obtained 
 by replacing $\to_\Rules$ with $\ito_\Rules$.
-For $\Rules_{\mathsf{plus}}$, the same family $\mathsf{plus}(\mathsf{s}^n(\mathsf{z}),\mathsf{z})$ also witnesses linear innermost derivational complexity, because every rewrite sequence is already innermost.
+For $\Rules_{\mathsf{plus}}$, the same family $\mathsf{plus}(\mathsf{s}^n(\mathsf{z}),\mathsf{z})$ 
+also witnesses linear innermost derivational complexity, because this rewrite sequence is already innermost.
 
 \subsection{Runtime Complexity}
 
@@ -189,7 +210,8 @@ For example, for $\Rules_{\mathsf{plus}}$ we have $\mathcal{D} = \{\mathsf{plus}
 A term $t \in \mathcal{T}(\F,\V)$ is \emph{basic} if $t = f(t_1,\ldots,t_k)$ 
 for some defined symbol $f \in \mathcal{D}$ and constructor terms $t_1,\ldots,t_k \in \mathcal{T}(\mathcal{C},\V)$.
 We write $\mathcal{T}_{\mathit{B}}^{\mathcal{R}}$ for the set of all basic terms w.r.t.\ $\mathcal{R}$.
-For example, $\mathsf{plus}(\mathsf{s}(\mathsf{s}(\mathsf{z})),\mathsf{s}(\mathsf{z}))$ is basic, whereas $\mathsf{s}(\mathsf{plus}(\mathsf{z},\mathsf{z}))$ is not basic because its root is the constructor $\mathsf{s}$ rather than the defined symbol $\mathsf{plus}$.
+For example, $\mathsf{plus}(\mathsf{s}(\mathsf{s}(\mathsf{z})),\mathsf{s}(\mathsf{z}))$ is basic, 
+whereas $\mathsf{s}(\mathsf{plus}(\mathsf{z},\mathsf{z}))$ is not basic because its root is the constructor $\mathsf{s}$ instead of a defined symbol.
 The term $\mathsf{plus}(\mathsf{plus}(\mathsf{z},\mathsf{z}))$ is also not basic, because it contains two defined symbols.
 
 The \emph{runtime complexity} of a rewrite relation $\to$ w.r.t.\ $\Rules$ is the function
@@ -197,10 +219,13 @@ The \emph{runtime complexity} of a rewrite relation $\to$ w.r.t.\ $\Rules$ is th
   \mathit{rc}_{\to,\Rules}(n) = \sup\{ \mathit{dh}_{\to}(t) \mid t \in \mathcal{T}_{\mathit{B}}^{\mathcal{R}},\ |t| \leq n \}.
 \]
 Thus, runtime complexity measures the maximal length of a rewrite sequence starting with a basic term of size at most $n$.
-For example, starting from the basic term $\mathsf{plus}(\mathsf{s}^n(\mathsf{z}),\mathsf{s}^m(\mathsf{z}))$, every rewrite sequence has exactly $n+1$ steps, so $\mathit{rc}_{\to_{\Rules_{\mathsf{plus}}},\Rules_{\mathsf{plus}}}$ is linear.
+For example, starting from the basic term $\mathsf{plus}(\mathsf{s}^n(\mathsf{z}),\mathsf{s}^m(\mathsf{z}))$, 
+every rewrite sequence has exactly $n+1$ steps, so $\mathit{rc}_{\to_{\Rules_{\mathsf{plus}}},\Rules_{\mathsf{plus}}}$ is linear.
 For the TRS $\Rules$, its full runtime complexity is $\mathit{rc}_{\to_\Rules,\Rules}$, 
-and its \emph{innermost runtime complexity} $\mathit{rc}_{\ito_{\Rules_{\mathsf{plus}}},\Rules_{\mathsf{plus}}}$ is defined analogously using $\ito_\Rules$ instead of $\to_\Rules$.
-For $\Rules_{\mathsf{plus}}$, the innermost runtime complexity is the same, since every basic term has a unique innermost rewrite sequence of length determined by the first argument.
+and its \emph{innermost runtime complexity} $\mathit{rc}_{\ito_{\Rules_{\mathsf{plus}}},\Rules_{\mathsf{plus}}}$ 
+is defined analogously using $\ito_\Rules$ instead of $\to_\Rules$.
+For $\Rules_{\mathsf{plus}}$, the innermost runtime complexity is the same, 
+since every basic term has a unique innermost rewrite sequence of length determined by the first argument.
 
 \section{Competition Categories}
 
@@ -208,7 +233,8 @@ The TRS formalism is used by the following categories.
 
 \subsection{TRS Standard}
 
-The TRS Standard category is concerned with the question ``Will every possible sequence of rewrites eventually stop?''. 
+The TRS Standard category is concerned with the question 
+``Will every sequence of rewrite steps eventually stop?''. 
 In other words, does every computation defined by the rewrite rules eventually reach a normal form? 
 
 \begin{formalproblem}
@@ -235,7 +261,7 @@ has the following input syntax:
 \texttt{(rule (plus (s x) y) (s (plus x y)))}
 \end{tabular}
 \end{center}
-Every rewrite step decreases the number of constructors in the first argument of $\mathsf{plus}$, and thus, the expected output should be \texttt{YES}.
+Every rewrite step decreases the number of constructors in the first argument of $\mathsf{plus}$, and thus, the best output would be \texttt{YES}.
 The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{plus}(\mathsf{s}(\mathsf{s}(x)), y)\}$
 has the following input syntax:
 \begin{center}
@@ -248,12 +274,13 @@ has the following input syntax:
 \texttt{(rule (plus (s x) y) (plus (s (s x)) y))}
 \end{tabular}
 \end{center}
-Starting from $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z})$, the second rule increases the first argument forever, so the expected output should be \texttt{NO}.
+Starting from $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z})$, the second rule increases the first argument forever, so the best output would be \texttt{NO}.
 
 \subsection{TRS Relative}
 
-The TRS Relative category is concerned with the question ``Will every possible sequence of rewrites eventually stop using a certain subset of the given rewrite rules?''. 
-In other words, if every rule has a cost which is either 0 or 1, then does every possible reduction has a finite total cost? 
+The TRS Relative category is concerned with the question 
+``Will every sequence of rewrite steps eventually stop using a certain subset of the given rewrite rules?''. 
+In other words, if every rule has a cost which is either 0 or 1, then does every (possibly infinite) reduction has a finite total cost? 
 
 \begin{formalproblem}
   {TRS Relative}
@@ -267,7 +294,9 @@ Relative termination isolates the rules whose usage should be finite while allow
 Relative termination is needed in many termination and complexity analysis techniques.
 
 \textbf{Example.}
-The relative TRS $\mathcal{R}/\mathcal{S}$ with strict part $\mathcal{R} = \{\mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{plus}(x,\mathsf{s}(y))\}$ and weak part $\mathcal{S} = \{\mathsf{plus}(\mathsf{z}, y) \to y\}$ has the following input syntax:
+The relative TRS $\mathcal{R}/\mathcal{S}$ with strict part 
+$\mathcal{R} = \{\mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{plus}(x,\mathsf{s}(y))\}$ 
+and weak part $\mathcal{S} = \{\mathsf{plus}(\mathsf{z}, y) \to y\}$ has the following input syntax:
 \begin{center}
 \begin{tabular}{l}
 \texttt{(format TRS)} \\
@@ -278,8 +307,11 @@ The relative TRS $\mathcal{R}/\mathcal{S}$ with strict part $\mathcal{R} = \{\ma
 \texttt{(rule (plus z y) y :cost 0)}
 \end{tabular}
 \end{center}
-Every strict step decreases the first argument of $\mathsf{plus}$, while the weak rule only removes the final base case, so the expected output should be \texttt{YES}.
-The relative TRS $\mathcal{R}/\mathcal{S}$ with the same strict part $\mathcal{R} = \{\mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{plus}(x,\mathsf{s}(y))\}$ and weak part $\mathcal{S} = \{\mathsf{plus}(\mathsf{z}, y) \to \mathsf{plus}(\mathsf{s}(\mathsf{z}), y)\}$ has the following input syntax:
+Every strict step decreases the first argument of $\mathsf{plus}$, 
+while the weak rule only removes the final base case, so the best output would be \texttt{YES}.
+The relative TRS $\mathcal{R}/\mathcal{S}$ with the same strict part 
+$\mathcal{R} = \{\mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{plus}(x,\mathsf{s}(y))\}$ and weak part 
+$\mathcal{S} = \{\mathsf{plus}(\mathsf{z}, y) \to \mathsf{plus}(\mathsf{s}(\mathsf{z}), y)\}$ has the following input syntax:
 \begin{center}
 \begin{tabular}{l}
 \texttt{(format TRS)} \\
@@ -290,12 +322,16 @@ The relative TRS $\mathcal{R}/\mathcal{S}$ with the same strict part $\mathcal{R
 \texttt{(rule (plus z y) (plus (s z) y) :cost 0)}
 \end{tabular}
 \end{center}
-Starting from $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z})$, a strict step yields $\mathsf{plus}(\mathsf{z},\mathsf{s}(\mathsf{z}))$, the weak rule rebuilds $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(\mathsf{z}))$, and this pattern repeats with infinitely many strict steps, so the expected output should be \texttt{NO}.
+Starting from $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z})$, 
+a strict step yields $\mathsf{plus}(\mathsf{z},\mathsf{s}(\mathsf{z}))$, 
+the weak rule rebuilds $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(\mathsf{z}))$, 
+and this pattern can go on forever with infinitely many strict steps, so the best output would be \texttt{NO}.
 
 \subsection{TRS Innermost}
 
-The TRS Innermost category is concerned with the question ``Will every innermost rewrite sequence eventually stop?''. 
-In other words, does every computation defined by the rewrite rules that only evaluates innermost reducible expressions eventually reach a normal form? 
+The TRS Innermost category is concerned with the question 
+``Will every innermost rewrite sequence eventually stop?''. 
+In other words, does every computation that only evaluates innermost redexes eventually reach a normal form? 
 
 \begin{formalproblem}
   {TRS Innermost}
@@ -305,12 +341,14 @@ In other words, does every computation defined by the rewrite rules that only ev
 \end{formalproblem}
 
 \textbf{Motivation.}
-This category studies termination under innermost rewriting, which closely corresponds to call-by-value evaluation.
+This category studies termination under an innermost evaluation strategy, 
+which closely corresponds to call-by-value evaluation.
 Since many programming languages evaluate arguments before calling a function, 
 innermost termination is an important evaluation strategy in real world programs.
 
 \textbf{Example.}
-The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{plus}(x,\mathsf{s}(y))\}$ has the following input syntax:
+The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; 
+\mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{plus}(x,\mathsf{s}(y))\}$ has the following input syntax:
 \begin{center}
 \begin{tabular}{l}
 \texttt{(format TRS)} \\
@@ -321,8 +359,9 @@ The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\ma
 \texttt{(rule (plus (s x) y) (plus x (s y)))}
 \end{tabular}
 \end{center}
-Every innermost step decreases the number of $\mathsf{s}$ symbols in the first argument, and thus, the expected output should be \texttt{YES}.
-The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{plus}(\mathsf{s}(x),\mathsf{s}(y))\}$ has the following input syntax:
+Every innermost step decreases the number of $\mathsf{s}$ symbols in the first argument, and thus, the best output would be \texttt{YES}.
+The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; 
+\mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{plus}(\mathsf{s}(x),\mathsf{s}(y))\}$ has the following input syntax:
 \begin{center}
 \begin{tabular}{l}
 \texttt{(format TRS)} \\
@@ -333,12 +372,13 @@ The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\ma
 \texttt{(rule (plus (s x) y) (plus (s x) (s y)))}
 \end{tabular}
 \end{center}
-Here $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z})$ rewrites by an innermost root step to $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(\mathsf{z}))$ and can continue forever, so the expected output should be \texttt{NO}.
+Here $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z})$ rewrites by an innermost root step to 
+$\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(\mathsf{z}))$ and can continue forever, so the best output would be \texttt{NO}.
 
 \subsection{TRS Outermost}
 
 The TRS Outermost category is concerned with the question ``Will every outermost rewrite sequence eventually stop?''. 
-In other words, does every computation defined by the rewrite rules that only evaluates outermost reducible expressions eventually reach a normal form? 
+In other words, does every computation that only evaluates outermost redexes eventually reach a normal form? 
 
 \begin{formalproblem}
   {TRS Outermost}
@@ -348,13 +388,14 @@ In other words, does every computation defined by the rewrite rules that only ev
 \end{formalproblem}
 
 \textbf{Motivation.}
-This category studies termination under outermost rewriting, 
+This category studies termination under an outermost evaluation strategy, 
 which is closely related to call-by-name or lazy evaluation.
 Although more restrictive than full rewriting, this strategy is important for languages 
 and semantics that evaluate the outermost call first, e.g., \textsf{Haskell}.
 
 \textbf{Example.}
-The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y))\}$ has the following input syntax:
+The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; 
+\mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y))\}$ has the following input syntax:
 \begin{center}
 \begin{tabular}{l}
 \texttt{(format TRS)} \\
@@ -365,8 +406,9 @@ The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\ma
 \texttt{(rule (plus (s x) y) (s (plus x y)))}
 \end{tabular}
 \end{center}
-Every outermost step contracts the root call of $\mathsf{plus}$ and decreases its first argument, so the expected output should be \texttt{YES}.
-The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to \mathsf{plus}(\mathsf{z}, y),\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y))\}$ has the following input syntax:
+Every outermost step reduces the root call of $\mathsf{plus}$ and decreases its first argument, so the best output would be \texttt{YES}.
+The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to \mathsf{plus}(\mathsf{z}, y),\; 
+\mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y))\}$ has the following input syntax:
 \begin{center}
 \begin{tabular}{l}
 \texttt{(format TRS)} \\
@@ -377,7 +419,7 @@ The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to \mathsf{plus}(\mathsf{
 \texttt{(rule (plus (s x) y) (s (plus x y)))}
 \end{tabular}
 \end{center}
-Starting from $\mathsf{plus}(\mathsf{z},\mathsf{z})$, the outermost redex rewrites to itself immediately, so the expected output should be \texttt{NO}.
+Starting from $\mathsf{plus}(\mathsf{z},\mathsf{z})$, the outermost redex rewrites to itself immediately, so the best output would be \texttt{NO}.
 
 \subsection{TRS Derivational Complexity}
 
@@ -389,12 +431,14 @@ Starting from $\mathsf{plus}(\mathsf{z},\mathsf{z})$, the outermost redex rewrit
 \end{formalproblem}
 
 \textbf{Motivation.}
-This category asks not only whether rewriting terminates, 
-but how long rewrite sequences can become as a function of the input size.
+Not only termination, but runtime is of equal importance for efficient and reliable software.
+So instead of checking whether rewriting terminates,
+this category focuses on how long rewrite sequences can become as a function of the input size.
 It measures the worst-case asymptotic complexity of unrestricted rewriting on arbitrary start terms.
 
 \textbf{Example.}
-The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y))\}$ has the following input syntax:
+The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; 
+\mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y))\}$ has the following input syntax:
 \begin{center}
 \begin{tabular}{l}
 \texttt{(format TRS)} \\
@@ -409,7 +453,10 @@ This system has quadratic derivational complexity. For an upper bound, every rew
 \[
   M(t) = \sum_{p \in \mathit{Pos}(t), t|_p = \mathsf{plus}(u,v)}|u|,
 \]
-and $M(t) \leq |t|^2$ for every term $t$. For a matching lower bound, define $t_0 = \mathsf{z}$ and $t_{n+1} = \mathsf{plus}(\mathsf{s}(t_n),\mathsf{z})$. Then $|t_n| = 3n+1$, while reducing $t_n$ to normal form takes $1 + 2 + \cdots + n = \Theta(n^2)$ steps. Hence, the expected output can be \texttt{WORST\_CASE(}$\mathrm{Pol}_2$\texttt{,}$\mathrm{Pol}_2$\texttt{)}.
+and $M(t) \leq |t|^2$ for every term $t$. For a matching lower bound, 
+define $t_0 = \mathsf{z}$ and $t_{n+1} = \mathsf{plus}(\mathsf{s}(t_n),\mathsf{z})$. 
+Then $|t_n| = 3n+1$, while reducing $t_n$ to normal form takes $1 + 2 + \cdots + n = \Theta(n^2)$ steps. 
+Hence, the best output would be \texttt{WORST\_CASE(Pol(n\^{}2),Pol(n\^{}2))}.
 
 \subsection{TRS Innermost Derivational Complexity}
 
@@ -421,12 +468,13 @@ and $M(t) \leq |t|^2$ for every term $t$. For a matching lower bound, define $t_
 \end{formalproblem}
 
 \textbf{Motivation.}
-This category measures the asymptotic complexity of TRS 
+This category measures the asymptotic complexity of a TRS 
 when only innermost rewrite sequences are considered.
 It is especially relevant when the intended execution model follows call-by-value evaluation.
 
 \textbf{Example.}
-The same TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y))\}$ has the following input syntax:
+The same TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; 
+\mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y))\}$ has the following input syntax:
 \begin{center}
 \begin{tabular}{l}
 \texttt{(format TRS)} \\
@@ -437,7 +485,11 @@ The same TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus
 \texttt{(rule (plus (s x) y) (s (plus x y)))}
 \end{tabular}
 \end{center}
-Its innermost derivational complexity is quadratic as well. The same measure $M$ gives the quadratic upper bound, and for the family $t_0 = \mathsf{z}$ and $t_{n+1} = \mathsf{plus}(\mathsf{s}(t_n),\mathsf{z})$, every reduction is forced to evaluate the nested first argument before the outer call can finish. Thus, the innermost derivation height of $t_n$ is again $\Theta(n^2)$, and the expected output can be \texttt{WORST\_CASE(}$\mathrm{Pol}_2$\texttt{,}$\mathrm{Pol}_2$\texttt{)}.
+Its innermost derivational complexity is quadratic as well. The same measure $M$ gives the quadratic upper bound, 
+and for the family $t_0 = \mathsf{z}$ and $t_{n+1} = \mathsf{plus}(\mathsf{s}(t_n),\mathsf{z})$, 
+every reduction is forced to evaluate the nested first argument before the outer call can finish. 
+Thus, the innermost derivation height of $t_n$ is again $\Theta(n^2)$, 
+and the best output would be \texttt{WORST\_CASE(Pol(n\^{}2),Pol(n\^{}2))}.
 
 \subsection{TRS Runtime Complexity}
 
@@ -449,11 +501,15 @@ Its innermost derivational complexity is quadratic as well. The same measure $M$
 \end{formalproblem}
 
 \textbf{Motivation.}
-Runtime complexity focuses on terms that represent an algorithm symbol applied to already constructed input data.
-This better matches the usual notion of program runtime than derivational complexity on arbitrary terms.
+Runtime complexity focuses on terms that represent 
+an algorithm applied to some input data that are not executable functions themselves.
+From the viewpoint of program analysis, 
+this better matches the usual notion of program runtime 
+than derivational complexity on arbitrary terms.
 
 \textbf{Example.}
-The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y)),\linebreak \mathsf{double}(x) \to \mathsf{plus}(x,x)\}$ has the following input syntax:
+The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y)),
+\linebreak \mathsf{double}(x) \to \mathsf{plus}(x,x)\}$ has the following input syntax:
 \begin{center}
 \begin{tabular}{l}
 \texttt{(format TRS)} \\
@@ -466,7 +522,11 @@ The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\ma
 \texttt{(rule (double x) (plus x x))}
 \end{tabular}
 \end{center}
-Starting from a basic term such as $\mathsf{double}(\mathsf{s}^n(\mathsf{z}))$, there is one call to $\mathsf{double}$ followed by a linear addition, so the runtime complexity has class $\mathrm{Pol}_1$, and the expected output can be \texttt{WORST\_CASE(}$\mathrm{Pol}_1$\texttt{,}$\mathrm{Pol}_1$\texttt{)}. This illustrates the difference to derivational complexity: nested terms like $\mathsf{double}(\mathsf{double}(\mathsf{s}^n(\mathsf{z})))$ are not basic and are therefore ignored in this category.
+Starting from a basic term such as $\mathsf{double}(\mathsf{s}^n(\mathsf{z}))$, 
+there is one call to $\mathsf{double}$ followed by a linear addition, 
+so the runtime complexity has class $\mathrm{Pol}_1$, and the best output would be \texttt{WORST\_CASE(Pol(n),Pol(n))}. 
+This illustrates the difference to derivational complexity: nested terms like 
+$\mathsf{double}(\mathsf{double}(\mathsf{s}^n(\mathsf{z})))$ are not basic and are therefore ignored in this category.
 
 \subsection{TRS Innermost Runtime Complexity}
 
@@ -478,11 +538,14 @@ Starting from a basic term such as $\mathsf{double}(\mathsf{s}^n(\mathsf{z}))$, 
 \end{formalproblem}
 
 \textbf{Motivation.}
-This category combines the restriction to basic start terms with the restriction to innermost rewriting.
-It captures the asymptotic cost of call-by-value computations on TRSs that represent algorithms on fixed input data.
+This category combines the restriction to basic start terms (algorithms applied on data)
+with the restriction to innermost rewriting (call-by-value evaluation).
+It captures the usual notion of program runtime for programming languages
+that follow a call-by-value evaluation.
 
 \textbf{Example.}
-The same TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y)),\linebreak \mathsf{double}(x) \to \mathsf{plus}(x,x)\}$ has the following input syntax:
+The same TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y)),
+\linebreak \mathsf{double}(x) \to \mathsf{plus}(x,x)\}$ has the following input syntax:
 \begin{center}
 \begin{tabular}{l}
 \texttt{(format TRS)} \\
@@ -495,4 +558,7 @@ The same TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus
 \texttt{(rule (double x) (plus x x))}
 \end{tabular}
 \end{center}
-On basic terms such as $\mathsf{double}(\mathsf{s}^n(\mathsf{z}))$, the unique innermost computation first expands $\mathsf{double}$ and then evaluates the resulting addition in linearly many steps, so the expected output can be \texttt{WORST\_CASE(}$\mathrm{Pol}_1$\texttt{,}$\mathrm{Pol}_1$\texttt{)}. Again, the category ignores non-basic nested calls such as $\mathsf{double}(\mathsf{double}(\mathsf{s}^n(\mathsf{z})))$, which is why the runtime measure differs from derivational complexity.
+On basic terms such as $\mathsf{double}(\mathsf{s}^n(\mathsf{z}))$, the unique innermost computation first expands $\mathsf{double}$ 
+and then evaluates the resulting addition in linearly many steps, so the best output would be \texttt{WORST\_CASE(Pol(n),Pol(n))}. 
+Again, the category ignores non-basic nested calls such as $\mathsf{double}(\mathsf{double}(\mathsf{s}^n(\mathsf{z})))$, 
+which is why the runtime measure differs from derivational complexity.
