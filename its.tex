@@ -152,11 +152,13 @@ For the lower bound \texttt{LB}, the possible outputs and their semantics are:
       %
       \begin{itemize}
       \item The output \texttt{Omega(n)} is equivalent to \texttt{Omega(n\textasciicircum 1)}.
-      \item The output \texttt{Omega(1)} is equivalent to \texttt{?}.
+      \item The output \texttt{Omega(1)} is equivalent to \texttt{Omega(n\textasciicircum 1)}, which in turn is equivalent \texttt{?}.
       \end{itemize}
     \item \texttt{NON\_POLY}: A super-polynomial (e.g., exponential) lower bound.
     \item \texttt{INF}: An infinite lower bound (for non-terminating ITSs, or terminating ITSs with unbounded runtime).
 \end{itemize}
+%
+The corresponding order is \texttt{Omega(n\textasciicircum 0) < Omega(n\textasciicircum 1) < ... < NON\_POLY < INF}.
 %
 Similarly, for the upper bound \texttt{UB}, the possible outputs and their semantics are:
 \begin{itemize}
@@ -167,4 +169,14 @@ Similarly, for the upper bound \texttt{UB}, the possible outputs and their seman
       \item The output \texttt{O(1)} is equivalent to \texttt{O(n\textasciicircum 0)}.
       \end{itemize}
     \item \texttt{FINITE}: A finite upper bound, e.g., exponential or super-exponential.
+\end{itemize}
+%
+The corresponding order is \texttt{O(n\textasciicircum 0) > O(n\textasciicircum 1) > ... > FINITE > ?}.
+%
+The conflicting results are:
+\begin{itemize}
+\item \texttt{Omega(n\textasciicircum d)} and \texttt{O(n\textasciicircum e)} where \texttt{d > e}
+\item \texttt{NON\_POLY} and \texttt{O(n\textasciicircum e)}
+\item \texttt{INF} and \texttt{O(n\textasciicircum e)}
+\item \texttt{INF} and \texttt{FINITE}
 \end{itemize}
