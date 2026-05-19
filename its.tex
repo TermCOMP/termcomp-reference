@@ -98,13 +98,24 @@ An \emph{evaluation} is a sequence
 %
 An ITS \emph{terminates} if all evaluations are finite.
 %
-The \emph{runtime complexity} is defined as follows.
+Let
+\[
+  ||\sigma||_{\infty} = \max \{ |\sigma(x_j)| \mid 1 \leq i \leq n \}
+\]
+denote the maximum norm of the state $\sigma\in\Sigma$, i.e., the largest absolute initial value among all program variables $x_1,\dots,x_n$ of $\mathit{entry}(x_1,\ldots,x_n)$.
+%
+Then the \emph{runtime complexity} is defined as follows.
 %
 \begin{definition}[Runtime Complexity]
-The \emph{runtime complexity} is the function $\rc\colon\Sigma\rightarrow\N \cup \{\omega\}$ with
-\[
-  \rc(\sigma) = \sup \{k \in \N \mid \exists s \in \CC.\ \mathit{entry}(x_1, \ldots, x_n)\sigma \rightarrow^k s \}.
-\]
+  The \emph{Derivation Height} is the function $\dheight\colon\Sigma\rightarrow\N \cup \{\omega\}$ with
+  \[
+    \dheight(\sigma) = \sup \{k \in \N \mid \exists s \in \CC.\ \mathit{entry}(x_1, \ldots, x_n)\sigma \rightarrow^k s \}.
+  \]
+  %
+  The \emph{runtime complexity} is the function $\rc\colon\N\rightarrow\N \cup \{\omega\}$ with
+  \[
+    \rc(k) = \sup \{\dheight(\sigma) \mid ||\sigma||_{\infty} \leq k\}.
+  \]
 \end{definition}
 %
 \noindent
@@ -133,16 +144,12 @@ The output follows the format:
 \]
 where \texttt{LB} represents the lower bound and \texttt{UB} represents the upper bound (see below for a detailed description).
 %
-The runtime bounds inferred by the tools are compared asymptotically as functions depending on the size of the initial valuation.
-%
-Formally, let $||\sigma||_{\infty} = \max \{ |\sigma(x_j)| \mid 1 \leq i \leq n \}$ denote the maximum norm of the state $\sigma\in\Sigma$, i.e., the largest absolute initial value among all program variables $x_1,\dots,x_n$ of $\mathit{entry}(x_1,\ldots,x_n)$.
-%
-In the output of the tool, $||\sigma||_{\infty}$ is represented by ``\texttt{n}''.
+The runtime bounds inferred by the tools are compared asymptotically.
 %
 For the lower bound \texttt{LB}, the possible outputs and their semantics are:
 \begin{itemize}
     \item \texttt{?}: No lower bound could be established.
-    \item \text{\texttt{Omega(n\textasciicircum}$k$\texttt{)}}: A polynomial lower bound of degree $k \in \N$, i.e., $rc(\sigma) \in \Omega(||\sigma||_{\infty}^k)$.
+    \item \text{\texttt{Omega(n\textasciicircum}$d$\texttt{)}}: A polynomial lower bound of degree $d \in \N$, i.e., $rc(n) \in \Omega(n^d)$.
       %
       \begin{itemize}
       \item The output \texttt{Omega(n)} is equivalent to \texttt{Omega(n\textasciicircum 1)}.
@@ -155,7 +162,7 @@ For the lower bound \texttt{LB}, the possible outputs and their semantics are:
 Similarly, for the upper bound \texttt{UB}, the possible outputs and their semantics are:
 \begin{itemize}
     \item \texttt{?}: No upper bound could be established.
-    \item \text{\texttt{O(n\textasciicircum}$k$\texttt{)}}: A polynomial upper bound of degree $k \in \N$, i.e., $rc(\sigma) \in \mathcal{O}(||\sigma||_{\infty}^k)$.
+    \item \text{\texttt{O(n\textasciicircum}$d$\texttt{)}}: A polynomial upper bound of degree $d \in \N$, i.e., $rc(n) \in \mathcal{O}(n^d)$.
       \begin{itemize}
       \item The output \texttt{O(n)} is equivalent to \texttt{O(n\textasciicircum 1)}.
       \item The output \texttt{O(1)} is equivalent to \texttt{O(n\textasciicircum 0)}.
