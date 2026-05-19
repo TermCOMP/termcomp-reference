@@ -1,14 +1,15 @@
 \chapter{Term Rewrite Systems}\label{chap:TRS}
 \chapterauthor{Jan-Christoph Kassing}
 
-\begin{abstract}
-  This chapter describes the syntax and semantics for first-order \emph{Term Rewrite Systems} (TRSs).
-  TRSs are the basic formalism behind several categories of the Termination Competition.
-  In particular, the categories \emph{TRS Standard}, \emph{TRS Innermost}, \emph{TRS Outermost}, \emph{TRS Relative}, 
-  \emph{TRS Derivational Complexity}, \emph{TRS Innermost Derivational Complexity}, \emph{TRS Runtime Complexity}, 
-  and \emph{TRS Innermost Runtime Complexity} all use the same underlying notion of first-order rewriting 
-  and differ only in the allowed rewrite strategy, in the class of start terms that is considered, or in allowing weak rules that can be used arbitrarily.
-\end{abstract}
+\section{Introduction}
+
+This chapter describes the syntax and semantics for first-order \emph{Term Rewrite Systems} (TRSs).
+TRSs are the basic formalism behind several categories of the Termination Competition.
+In particular, the categories \emph{TRS Standard}, \emph{TRS Innermost}, \emph{TRS Outermost}, \emph{TRS Relative}, 
+\emph{TRS Derivational Complexity}, \emph{TRS Innermost Derivational Complexity}, \emph{TRS Runtime Complexity}, 
+and \emph{TRS Innermost Runtime Complexity} all use the same underlying notion of first-order rewriting 
+and differ only in the allowed rewrite strategy, in the class of start terms that is considered, or in allowing weak rules that can be used arbitrarily.
+
 
 \section{Syntax}
 
@@ -423,11 +424,17 @@ Starting from $\mathsf{plus}(\mathsf{z},\mathsf{z})$, the outermost redex rewrit
 
 \subsection{TRS Derivational Complexity}
 
+Next, we introduce the different complexity analysis categories.
+Here, we use the standard complexity results as discussed in \hyperref[scoring_complexity]{Complexity Scoring}, but without \texttt{INF} as possible lower bound and \texttt{FINITE} as possible upper bound.
+The rationale behind this decision is that \texttt{INF} is equal to non-termination
+and \texttt{FINITE} is equal to termination for finite TRSs.
+Hence, these results are already covered by the termination categories.
+
 \begin{formalproblem}
   {TRS Derivational Complexity}
   {TRS $\Rules$}
   {What is the asymptotic derivational complexity of $\Rules$?}
-  {See \hyperref[scoring_complexity]{Complexity Scoring}}
+  {See \hyperref[scoring_complexity]{Complexity Scoring}, but without \texttt{INF} as possible lower bound and \texttt{FINITE} as possible upper bound.}
 \end{formalproblem}
 
 \textbf{Motivation.}
@@ -464,7 +471,7 @@ Hence, the best output would be \texttt{WORST\_CASE(Pol(n\^{}2),Pol(n\^{}2))}.
   {TRS Innermost Derivational Complexity}
   {TRS $\Rules$}
   {What is the asymptotic innermost derivational complexity of $\Rules$?}
-  {See \hyperref[scoring_complexity]{Complexity Scoring}}
+  {See \hyperref[scoring_complexity]{Complexity Scoring}, but without \texttt{INF} as possible lower bound and \texttt{FINITE} as possible upper bound.}
 \end{formalproblem}
 
 \textbf{Motivation.}
@@ -497,7 +504,7 @@ and the best output would be \texttt{WORST\_CASE(Pol(n\^{}2),Pol(n\^{}2))}.
   {TRS Runtime Complexity}
   {TRS $\Rules$}
   {What is the asymptotic runtime complexity of $\Rules$?}
-  {See \hyperref[scoring_complexity]{Complexity Scoring}}
+  {See \hyperref[scoring_complexity]{Complexity Scoring}, but without \texttt{INF} as possible lower bound and \texttt{FINITE} as possible upper bound.}
 \end{formalproblem}
 
 \textbf{Motivation.}
@@ -534,7 +541,7 @@ $\mathsf{double}(\mathsf{double}(\mathsf{s}^n(\mathsf{z})))$ are not basic and a
   {TRS Innermost Runtime Complexity}
   {TRS $\Rules$}
   {What is the asymptotic innermost runtime complexity of $\Rules$?}
-  {See \hyperref[scoring_complexity]{Complexity Scoring}}
+  {See \hyperref[scoring_complexity]{Complexity Scoring}, but without \texttt{INF} as possible lower bound and \texttt{FINITE} as possible upper bound.}
 \end{formalproblem}
 
 \textbf{Motivation.}
