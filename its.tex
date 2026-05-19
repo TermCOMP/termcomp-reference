@@ -1,8 +1,9 @@
 \chapter{Integer Transition Systems}
 \chapterauthor{Florian Frohn}
+\chapterauthor{Nils Lommen}
 
 \begin{abstract}
-  This chapter describes the syntax and semantics for \emph{Integer Transition Systems}.
+  This chapter describes the syntax and semantics for \emph{Integer Transition Systems (ITSs)}.
   %
   Such systems are \emph{Logically Constrained Term Rewrite Systems} (LCTRSs) where the underlying SMT theory is fixed to the theory of integers, and where function symbols must not occur anywhere but at the root position.
   %
@@ -64,7 +65,9 @@ Let $\F$ be the set of all declared function symbols (i.e., we have $\mathtt{f} 
 %
 In the sequel, we write $f(t_1,\ldots,t_n)$ instead of $\mathtt{(f\ t_1\ \ldots\ t_n)}$ for the sake of readability.
 %
-Moreover, we always assume that terms respect the arity of the respective function symbols (i.e., if we write $f(t_1,\ldots,t_n)$, then we implicitly assume that $f$ has been declared as $\mathtt{(fun\ f\ ({-}{>}\ \underbrace{\mathtt{Int\ \ldots\ Int}}_{n \times}\ Int))}$.
+Moreover, we always assume that terms respect the arity of the respective function symbols.
+%
+Thus, if we write $f(t_1,\ldots,t_n)$, then we implicitly assume that $f$ has been declared as $$\mathtt{(fun\ f\ (\texttt{->}\ \underbrace{\mathtt{Int\ \ldots\ Int}}_{n \text{ times}}\ Int))}.$$
 %
 For a rule with left-hand side $\ell$, right-hand side $r$, and guard $\varphi$, we write $\ell \to r\ \guard{\varphi}$.
 %
@@ -74,20 +77,95 @@ The unique entrypoint (as defined by the line \texttt{(entrypoint ...)}) is deno
 %
 A \emph{configuration} is a term $f(c_1,\ldots,c_n)$ where $f \in \F$ and $c_1,\ldots,c_n \in \Z$.
 %
-A \emph{valuation} is a mapping $\sigma: \V \to \Z \cup \B$ (where $\B = \{\top,\bot\}$ denotes the Booleans) that respects the types of variables (i.e., variables of type \texttt{Int} are mapped to $\Z$, and variables of type \texttt{Bool} are mapped to $\B$).
+$\CC$ is the set of all configurations.
+%
+A \emph{valuation} is a mapping $\sigma: \V \to \Z$ and the set of all valuations is denoted by $\Sigma$.
 %
 $\Rules$ induces a rewrite relation on configurations as follows:
 %
 We have
 \[
-  f(c_1,\ldots,c_n) \to_\Rules g(d_1,\ldots,d_m)
+  f(c_1,\ldots,c_n) \to g(d_1,\ldots,d_m)
 \]
-if there is a rule $f(x_1\ldots,x_n) \to g(t_1,\ldots,t_m)\ \guard{\varphi} \in \Rules$ and a valuation $\sigma$ such that $\sigma(x_i) = c_i$ for all $i \in \{1, \ldots, n\}$, $t_i\sigma \equiv_{\mathtt{Ints}} d_i$ for all $i \in \{1, \ldots, m\}$, and $\sigma \models_{\mathtt{Ints}} \varphi$.
+if there is a rule $f(x_1\ldots,x_n) \to g(t_1,\ldots,t_m)\ \guard{\varphi} \in \Rules$ and a valuation $\sigma\in\Sigma$ such that $\sigma(x_i) = c_i$ for all $i \in \{1, \ldots, n\}$, $t_i\sigma \equiv_{\mathtt{Ints}} d_i$ for all $i \in \{1, \ldots, m\}$, and $\sigma \models_{\mathtt{Ints}} \varphi$.
 %
-Here, $\sigma \models_{\mathtt{Ints}} \varphi$ means that there is an extension $\theta \in \mathtt{Ints}$ of $\sigma$ such that $\theta \models \varphi$ (note that SMT theories are defined as classes of structures), and $t_i\sigma \equiv_{\mathtt{Ints}} d_i$ means that we have $\theta \models t_i\sigma = d_i$ for all $\theta \in \mathtt{Ints}$.
+Here, $\sigma \models_{\mathtt{Ints}} \varphi$ means that there is an extension $\theta \in \mathtt{Ints}$ of $\sigma\in\Sigma$ such that $\theta \models \varphi$ (note that SMT theories are defined as classes of structures), and $t_i\sigma \equiv_{\mathtt{Ints}} d_i$ means that we have $\theta \models t_i\sigma = d_i$ for all $\theta \in \mathtt{Ints}$.
 %
-A \emph{run} is a (possibly infinite) sequence
+An \emph{evaluation} is a sequence
 \[
-  \mathit{entry}(c_1,\ldots,c_n) \to_\Rules s_1 \to_\Rules s_2 \to_\Rules \ldots
+  \mathit{entry}(c_1,\ldots,c_n) \to s_1 \to \ldots \to s_k.
 \]
-An integer transition system terminates if all runs are finite.
+%
+An ITS \emph{terminates} if all evaluations are finite.
+%
+Let
+\[
+  ||\sigma||_{\infty} = \max \{ |\sigma(x_j)| \mid 1 \leq i \leq n \}
+\]
+denote the maximum norm of the state $\sigma\in\Sigma$, i.e., the largest absolute initial value among all program variables $x_1,\dots,x_n$ of $\mathit{entry}(x_1,\ldots,x_n)$.
+%
+Then the \emph{runtime complexity} is defined as follows.
+%
+\begin{definition}[Runtime Complexity]
+  The \emph{Derivation Height} is the function $\dheight\colon\Sigma\rightarrow\N \cup \{\omega\}$ with
+  \[
+    \dheight(\sigma) = \sup \{k \in \N \mid \exists s \in \CC.\ \mathit{entry}(x_1, \ldots, x_n)\sigma \rightarrow^k s \}.
+  \]
+  %
+  The \emph{runtime complexity} is the function $\rc\colon\N\rightarrow\N \cup \{\omega\}$ with
+  \[
+    \rc(k) = \sup \{\dheight(\sigma) \mid ||\sigma||_{\infty} \leq k\}.
+  \]
+\end{definition}
+%
+\noindent
+%
+% A function $rb\colon\Sigma\rightarrow\N \cup \{\omega\}$ is called an \emph{upper runtime bound} if $\rc(\sigma) \leq rb(\sigma)$ for all $\sigma \in \Sigma$.
+% %
+% Similarly, a function $lb\colon\Sigma\rightarrow\N \cup \{\omega\}$ is called a \emph{lower runtime bound} if $\rc(\sigma) \geq lb(\sigma)$ for all $\sigma \in \Sigma$.
+%
+\subsection{Termination}
+%
+Regarding \emph{termination}, the tool provides one of three possible outputs:
+\[
+  \texttt{YES} \mid \texttt{NO} \mid \texttt{MAYBE}
+\]
+The tool returns \texttt{YES} if the integer transition system is proven to be terminating and \texttt{NO} if it is non-terminating.
+%
+Otherwise, \texttt{MAYBE} is returned.
+%
+\subsection{Complexity}
+%
+Regarding \emph{complexity}, the tool outputs a combined expression for the worst-case lower and upper bounds on the runtime complexity.
+%
+The output follows the format:
+\[
+  \texttt{WORST\_CASE(LB, UB)}
+\]
+where \texttt{LB} represents the lower bound and \texttt{UB} represents the upper bound (see below for a detailed description).
+%
+The runtime bounds inferred by the tools are compared asymptotically.
+%
+For the lower bound \texttt{LB}, the possible outputs and their semantics are:
+\begin{itemize}
+    \item \texttt{?}: No lower bound could be established.
+    \item \text{\texttt{Omega(n\textasciicircum}$d$\texttt{)}}: A polynomial lower bound of degree $d \in \N$, i.e., $rc(n) \in \Omega(n^d)$.
+      %
+      \begin{itemize}
+      \item The output \texttt{Omega(n)} is equivalent to \texttt{Omega(n\textasciicircum 1)}.
+      \item The output \texttt{Omega(1)} is equivalent to \texttt{?}.
+      \end{itemize}
+    \item \texttt{NON\_POLY}: A super-polynomial (e.g., exponential) lower bound.
+    \item \texttt{INF}: An infinite lower bound (for non-terminating ITSs, or terminating ITSs with unbounded runtime).
+\end{itemize}
+%
+Similarly, for the upper bound \texttt{UB}, the possible outputs and their semantics are:
+\begin{itemize}
+    \item \texttt{?}: No upper bound could be established.
+    \item \text{\texttt{O(n\textasciicircum}$d$\texttt{)}}: A polynomial upper bound of degree $d \in \N$, i.e., $rc(n) \in \mathcal{O}(n^d)$.
+      \begin{itemize}
+      \item The output \texttt{O(n)} is equivalent to \texttt{O(n\textasciicircum 1)}.
+      \item The output \texttt{O(1)} is equivalent to \texttt{O(n\textasciicircum 0)}.
+      \end{itemize}
+    \item \texttt{FINITE}: A finite upper bound, e.g., exponential or super-exponential.
+\end{itemize}

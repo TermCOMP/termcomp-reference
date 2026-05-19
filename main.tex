@@ -10,6 +10,7 @@
 \theoremstyle{theorem}\newtheorem{theorem}{Theorem}
 \theoremstyle{definition}\newtheorem{example}[theorem]{Example}
 
+\newcommand{\CC}{\mathcal{C}}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\Z}{\mathbb{Z}}
 \newcommand{\B}{\mathbb{B}}
@@ -59,6 +60,11 @@
 \newcommand{\nat}{\symb{nat}}
 
 \newcommand{\guard}[1]{\llbracket #1 \rrbracket}
+\DeclareMathOperator{\rc}{rc}
+\DeclareMathOperator{\dheight}{dh}
+
+\usepackage{amsthm}
+\newtheorem{definition}{Definition}
 
 \makeatletter
 \newcommand{\chapterauthor}[1]{%
