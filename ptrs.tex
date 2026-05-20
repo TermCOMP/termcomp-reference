@@ -1,0 +1,307 @@
+\newcommand{\xliftto}[1]{\mathrel{\smash{\stackrel{\raisebox{3.4pt}{\tiny $#1\:$}}{\smash{\liftto}}}}}
+\newcommand{\xleftliftto}[1]{\mathrel{\smash{\stackrel{\raisebox{3.4pt}{\tiny $\:#1$}}{\smash{\leftliftto}}}}}
+\newcommand{\liftto}{\rightrightarrows}
+\newcommand{\iliftto}{\xliftto{\mathbf{i}}}
+
+\chapter{Probabilistic Term Rewrite Systems}
+\chapterauthor{Jan-Christoph Kassing}
+
+\section{Introduction}
+
+This chapter describes the syntax and semantics for first-order \emph{Probabilistic Term Rewrite Systems} (PTRSs).
+PTRSs extend ordinary TRSs by allowing rewrite rules with finitely many probabilistic outcomes.
+In the Termination Competition, the categories \emph{PTRS Standard} and \emph{PTRS Innermost}
+use the same underlying input format and differ only in whether arbitrary rewrite steps or only innermost rewrite steps are considered.
+
+\section{Syntax}
+
+Probabilistic term rewrite systems have the following syntax.
+
+\begin{grammar}{TRS Syntax}
+  \begin{tabular}{lll}
+  ptrs & ::= & \texttt{(format PTRS)} fun* prule* \\
+  fun & ::= & \texttt{(fun} IDENTIFIER NAT\texttt{)} \\
+  term & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER term+\texttt{)} \\
+  prule & ::= & \texttt{(prule} term dist\texttt{)} \\
+  dist & ::= & \texttt{((} outcome+\texttt{))} \\
+  outcome & ::= & \texttt{(}term prob?\texttt{)} \\
+  prob & ::= & \texttt{:prob} NAT \\
+  \end{tabular}
+\end{grammar}
+
+\bigskip
+Additionally, we have NAT $\in \mathbb{N}$, and IDENTIFIER are intended to be valid SMT-LIB symbols.
+As in the TRS format, quoted and unquoted identifiers should not be mixed, and reserved words such as
+\texttt{fun}, \texttt{prule}, and \texttt{format} must not be used as identifiers.
+Function symbols are declared by \texttt{(fun f n)}, where \texttt{n} is the arity of \texttt{f}.
+Identifiers that are not declared as function symbols are variables.
+
+Each probabilistic rule contains a finite list of outcomes.
+The optional annotation \texttt{:prob q} assigns the positive weight $q$ to the corresponding outcome.
+If it is omitted, the default weight is $1$.
+The actual branch probabilities are obtained by normalizing all weights of the rule.
+For example, the outcomes \texttt{((a :prob 2) (b :prob 1))} represent the distribution
+$\{\nicefrac{2}{3}:\mathsf{a},\nicefrac{1}{3}:\mathsf{b}\}$.
+
+\textbf{Example.}
+The PTRS $\mathcal{P} = \{\mathsf{f} \to \{\nicefrac{1}{2}:\mathsf{f},\; \nicefrac{1}{2}:\mathsf{stop}\}\}$
+has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format PTRS)} \\
+\texttt{(fun f 0)} \\
+\texttt{(fun stop 0)} \\
+\texttt{(prule f ((f :prob 1) (stop :prob 1)))}
+\end{tabular}
+\end{center}
+
+\section{Semantics}
+
+More details about the following definitions and results can be found in \cite{avanzini2018ProbabilisticTermRewriting}
+We write $\mathcal{T}(\F,\V)$ for the set of all terms over a signature $\F = \biguplus_{k \in \N} \F_k$ of function symbols and a set $\V$ of variables.
+A function symbol $f \in \F_k$ has arity $k$.
+As usual, substitutions, positions, subterms, and contexts are defined exactly as for ordinary TRSs, see \Cref{chap:TRS}.
+
+A \emph{finite multi-distribution} on a set $A$ is a multiset
+$\mu = \{p_1:a_1,\ldots,p_m:a_m\}$ where every $0 \leq p_i < 1$,
+every $a_i \in A$, and $\sum_{i=1}^m p_i = 1$.
+The set of all finite multi-distributions on $A$ is denoted $\mathit{FDist}(A)$.
+For example, $\{\nicefrac{1}{2}:\mathsf{f},\nicefrac{1}{2}:\mathsf{stop}\}$ is a finite multi-distribution on
+$\mathcal{T}(\F,\V)$ where $\F$ is the signature of $\mathcal{P}_{\mathsf{coin}}$.
+
+A \emph{probabilistic rewrite rule} is a pair $\ell \to \mu$, where $\ell \in \mathcal{T}(\F,\V)$ and
+$\mu$ is a finite multi-distribution over $\mathcal{T}(\F,\V)$.
+A \emph{probabilistic term rewrite system} (PTRS) is a finite set $\mathcal{P}$ of probabilistic rewrite rules.
+For example, the rule $\mathsf{f} \to \{\nicefrac{1}{2}:\mathsf{f},\nicefrac{1}{2}:\mathsf{stop}\}$ is a probabilistic rewrite rule,
+and $\mathcal{P}_{\mathsf{coin}} = \{\mathsf{f} \to \{\nicefrac{1}{2}:\mathsf{f},\nicefrac{1}{2}:\mathsf{stop}\}\}$ is a PTRS.
+
+The concrete input syntax stores positive weights instead of normalized probabilities.
+Thus, a declaration
+\[
+  \texttt{(prule }\ell\texttt{ ((}r_1\texttt{ :prob }w_1\texttt{) \ldots (}r_k\texttt{ :prob }w_k\texttt{)))}
+\]
+denotes the rule
+\[
+  \ell \to \Big\{\frac{w_1}{W}:r_1,\ldots,\frac{w_k}{W}:r_k\Big\},
+  \qquad\text{where } W = \sum_{i=1}^{k} w_i.
+\]
+For instance, \texttt{(prule f ((f :prob 1) (stop :prob 1)))} denotes the rule
+$\mathsf{f} \to \{\nicefrac{1}{2}:\mathsf{f},\nicefrac{1}{2}:\mathsf{stop}\}$.
+
+The PTRS $\mathcal{P}$ induces a relation
+${\to_\mathcal{P}} \subseteq \mathcal{T}(\F,\V) \times \mathit{FDist}(\mathcal{T}(\F,\V))$.
+We define $s \to_\mathcal{P} \mu$ if there exist a position $p \in \mathit{Pos}(s)$,
+a rule $\ell \to \{q_1:r_1,\ldots,q_k:r_k\} \in \mathcal{P}$, and a substitution $\sigma$
+such that $s|_p = \ell\sigma$ and $\mu = \{q_1:s[r_1\sigma]_p,\ldots,q_k:s[r_k\sigma]_p\}$.
+Thus, one rewrite step replaces a redex by a finite probability distribution over successor terms.
+For example, $\mathsf{f} \to_{\mathcal{P}_{\mathsf{coin}}} \{\nicefrac{1}{2}:\mathsf{f},\nicefrac{1}{2}:\mathsf{stop}\}$.
+A term $u$ is a \emph{redex} w.r.t.\ $\mathcal{P}$ if there exist a rule $\ell \to \mu \in \mathcal{P}$ and a substitution $\sigma$ with $u = \ell\sigma$.
+A term is in \emph{normal form} w.r.t.\ $\mathcal{P}$ if it contains no redex as a subterm.
+An \emph{innermost probabilistic rewrite step}, written $s \ito_\mathcal{P} \mu$, is a rewrite step $s \to_\mathcal{P} \mu$ at a position $p$
+such that all proper subterms of the redex $s|_p$ are in normal form w.r.t.\ $\mathcal{P}$.
+In $\mathcal{P}_{\mathsf{coin}}$, the term $\mathsf{f}$ is a redex, the term $\mathsf{stop}$ is a normal form,
+and the above step is also innermost because $\mathsf{f}$ has no proper subterms.
+
+\subsection{Lifted Rewriting and Probabilistic Termination}
+
+To describe termination in the probabilistic setting, 
+rewrite steps are lifted from single terms to
+multi-distributions over terms.
+
+Let ${\to} \subseteq \mathcal{T}(\F,\V) \times \mathit{FDist}(\mathcal{T}(\F,\V))$.
+For $0 < p \leq 1$ and $\mu = \{q_1:t_1,\ldots,q_m:t_m\}$, let $p \cdot \mu = \{p\cdot q_1:t_1, \ldots, p\cdot q_m:t_m\}$.
+The \emph{lifting} of $\to$, written $\liftto$, is the smallest relation on multi-distributions satisfying the following clauses:
+\begin{itemize}[itemsep=0pt]
+  \item If $t$ is in normal form w.r.t.\ $\to$, then $\{1:t\} \liftto \{1:t\}$.
+  \item If $t \to \mu$, then $\{1:t\} \liftto \mu$.
+  \item If $\mu_1 \liftto \nu_1,\ldots,\mu_k \liftto \nu_k$ and $p_1,\ldots,p_k > 0$ with $\sum_{j=1}^{k} p_j = 1$, then
+  \[
+    \bigcup_{j=1}^{k} p_j \cdot \mu_j \liftto \bigcup_{j=1}^{k} p_j \cdot \nu_j.
+  \]
+\end{itemize}
+For a PTRS $\mathcal{P}$, we write $\liftto_\mathcal{P}$ and $\iliftto_\mathcal{P}$ for the lifting of $\to_\mathcal{P}$ and $\ito_\mathcal{P}$, respectively.
+For example, consider $\vec{\nu} = (\nu_n)_{n \in \mathbb{N}}$ with $\nu_0 = \{1:\mathsf{f}\} 
+\iliftto_{\mathcal{P}_{\mathsf{coin}}} \nu_1 = \{\nicefrac{1}{2}:\mathsf{f}, \linebreak \nicefrac{1}{2}:\mathsf{stop}\}
+\iliftto_{\mathcal{P}_{\mathsf{coin}}} \nu_2 = \{\nicefrac{1}{4}:\mathsf{f},\nicefrac{1}{4}:\mathsf{stop},\nicefrac{1}{2}:\mathsf{stop}\} \iliftto_{\mathcal{P}_{\mathsf{coin}}} \cdots$.
+
+For a multi-distribution $\mu$, let
+\[
+  |\mu|_{\mathcal{P}} = \sum_{(p:t) \in \mu,\; t \in \mathit{NF}_{\mathcal{P}}} p,
+\]
+that is, $|\mu|_{\mathcal{P}}$ is the total probability mass of normal forms in $\mu$.
+For example,
+$|\{\nicefrac{1}{2}:\mathsf{f},\nicefrac{1}{2}:\mathsf{stop}\}|_{\mathcal{P}_{\mathsf{coin}}} = \nicefrac{1}{2}$
+and
+$|\{\nicefrac{1}{4}:\mathsf{f},\nicefrac{3}{4}:\mathsf{stop}\}|_{\mathcal{P}_{\mathsf{coin}}} = \nicefrac{3}{4}$.
+Let $(\mu_n)_{n \in \mathbb{N}}$ be an infinite $\liftto_\mathcal{P}$-rewrite sequence,
+that is, $\mu_n \liftto_\mathcal{P} \mu_{n+1}$ for all $n \in \mathbb{N}$.
+The PTRS $\mathcal{P}$ is \emph{almost-surely terminating} (AST) if for every such sequence with
+$\mu_0 = \{1:t\}$, we have $\lim_{n \to \infty} |\mu_n|_{\mathcal{P}} = 1$, 
+i.e., if every infinite rewrite sequence reaches a normal form with probability~$1$.
+For $\vec{\nu} = (\nu_n)_{n \in \mathbb{N}}$ from above, we get
+$\lim_{n \to \infty} |\nu_n|_{\mathcal{P}_{\mathsf{coin}}} = \lim_{n \to \infty} 1-2^{-n} = 1$.
+
+For an infinite $\liftto_\mathcal{P}$-rewrite sequence $\vec{\mu} = (\mu_n)_{n \in \mathbb{N}}$, its
+\emph{expected derivation length} is defined by
+\[
+  \mathit{edl}(\vec{\mu}) = \sum_{n=0}^{\infty} (1 - |\mu_n|_{\mathcal{P}}).
+\]
+For the sequence $\vec{\nu}$ from above, 
+we get $\mathit{edl}(\vec{\nu}) = \sum_{n=0}^{\infty} 2^{-n} = 2$.
+For a start term $t$, its \emph{expected derivation height} is
+\[
+  \mathit{edh}_{\mathcal{P}}(t) = \sup\{ \mathit{edl}(\vec{\mu}) \mid \vec{\mu}
+  \text{ is a } \liftto_\mathcal{P}\text{-rewrite sequence with } \mu_0 = \{1:t\} \}.
+\]
+For $\mathcal{P}_{\mathsf{coin}}$, every lifted rewrite sequence starting from $\{1:\mathsf{f}\}$ is the same,
+so $\mathit{edh}_{\mathcal{P}_{\mathsf{coin}}}(\mathsf{f}) = 2$.
+The PTRS $\mathcal{P}$ is \emph{strongly almost-surely terminating} (SAST) if
+$\mathit{edh}_{\mathcal{P}}(t) < \infty$ for every start term $t$.
+Equivalently, for every term $t$ there is a finite bound $C_t$ such that every lifted rewrite sequence
+starting from $\{1:t\}$ has expected derivation length at most $C_t$.
+For example, $\mathcal{P}_{\mathsf{coin}}$ is SAST, 
+as one can take $C_{\mathsf{f}} = 2$ and $C_{\mathsf{stop}} = 0$.
+Note that every PTRS that is SAST is also AST, i.e., 
+\[\mathcal{P} \text{ is AST } \Longleftarrow \mathcal{P} \text{ is SAST } \]
+
+The notions of \emph{innermost AST} and \emph{innermost SAST} are obtained by replacing
+$\to_\mathcal{P}$ and $\liftto_\mathcal{P}$ with $\ito_\mathcal{P}$ and $\iliftto_\mathcal{P}$.
+For example, $\mathcal{P}_{\mathsf{coin}}$ is also innermost AST and innermost SAST.
+
+\section{Competition Categories}
+
+The PTRS formalism is used by the following two categories.
+
+\subsection{PTRS Standard}
+
+The PTRS Standard category is concerned with the question whether every rewrite sequence
+eventually stops with probability~$1$ and whether every start term has a finite upper bound
+on the expected runtime of all rewrite sequences starting from it.
+In other words, the category asks for proofs of AST or of the stronger property SAST.
+
+\begin{formalproblem}
+  {PTRS Standard}
+  {PTRS $\mathcal{P}$}
+  {Is $\mathcal{P}$ AST or SAST?}
+  {\texttt{WORST\_CASE(}$f$\texttt{,}$g$\texttt{)}, where}
+  \begin{align*}
+    &f \in \{\texttt{?} \sqsubseteq \texttt{Non-SAST} \sqsubseteq \texttt{Non-AST}\}\\
+    &g \in \{\texttt{?} \sqsubseteq \texttt{AST} \sqsubseteq \texttt{SAST}\}
+  \end{align*}
+  and where $f$ is the lower bound and $g$ is the upper bound.
+\end{formalproblem}
+
+\textbf{Motivation.}
+This category captures probabilistic termination without fixing an evaluation strategy.
+It is the natural analogue of unrestricted rewriting for probabilistic programs,
+where each rewrite step may branch into several successor states with different probabilities.
+Probabilistic programming is used to deal with uncertainty in data and
+has applications in many areas such as machine learning and Bayesian inference \cite{Gordon14}.
+
+\textbf{Example.}
+The PTRS $\mathcal{P} = \{\mathsf{g}(x) \to \{\nicefrac{1}{2}:\mathsf{g}(\mathsf{g}(x)),\; \nicefrac{1}{2}:x\}\}$
+has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format PTRS)} \\
+\texttt{(fun g 1)} \\
+\texttt{(prule (g x) (((g (g x)) :prob 1) (x :prob 1)))}
+\end{tabular}
+\end{center}
+This system induces a symmetric random walk on the number of outermost $\mathsf{g}$ symbols.
+It is AST, since divergence has probability~$0$, but it is not SAST 
+because the expected derivation length is unbounded.
+Hence, the best output would be \texttt{WORST\_CASE(Non-SAST,AST)},
+and \texttt{WORST\_CASE(?,AST)}, \texttt{WORST\_CASE(Non-SAST,?)}, and \texttt{WORST\_CASE(?,?)} 
+are the other possible outputs.
+
+The PTRS $\mathcal{P} = \{\mathsf{f}(x) \to \{\nicefrac{1}{3}:\mathsf{f}(\mathsf{f}(x)),\; \nicefrac{2}{3}:x\}\}$
+has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format PTRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(prule (f x) (((f (f x)) :prob 1) (x :prob 2)))}
+\end{tabular}
+\end{center}
+This random walk is biased towards decreasing the number of outermost $\mathsf{f}$ symbols.
+Hence, every start term has finite expected derivation height, so the system is SAST.
+Thus, the best output would be \texttt{WORST\_CASE(?,SAST)},
+and \texttt{WORST\_CASE(?,?)} is the other possible output.
+
+The PTRS $\mathcal{P} = \{\mathsf{h}(x) \to \{\nicefrac{2}{3}:\mathsf{h}(\mathsf{h}(x)),\; \nicefrac{1}{3}:x\}\}$
+has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format PTRS)} \\
+\texttt{(fun h 1)} \\
+\texttt{(prule (h x) (((h (h x)) :prob 2) (x :prob 1)))}
+\end{tabular}
+\end{center}
+This random walk is biased towards larger terms and is not AST.
+Therefore, neither AST nor SAST can be certified,
+so the best output would be \texttt{WORST\_CASE(Non-AST,?)},
+and \texttt{WORST\_CASE(?,?)} is the other possible output.
+
+\subsection{PTRS Innermost}
+
+The PTRS Innermost category restricts rewriting to innermost redexes.
+Thus, it asks whether every innermost rewrite sequence eventually stops with probability~$1$
+and whether every start term has a finite upper bound on the expected runtime of all innermost rewrite sequences.
+
+\begin{formalproblem}
+  {PTRS Innermost}
+  {PTRS $\mathcal{P}$}
+  {Is $\mathcal{P}$ innermost AST or innermost SAST?}
+  {\texttt{WORST\_CASE(}$f$\texttt{,}$g$\texttt{)}, where}
+  \begin{align*}
+    &f \in \{\texttt{?} \sqsubseteq \texttt{Non-SAST} \sqsubseteq \texttt{Non-AST}\}\\
+    &g \in \{\texttt{?} \sqsubseteq \texttt{AST} \sqsubseteq \texttt{SAST}\}
+  \end{align*}
+  and where $f$ is the lower bound and $g$ is the upper bound.
+\end{formalproblem}
+
+\textbf{Motivation.}
+This category studies probabilistic rewriting under a call-by-value style strategy.
+Innermost rewriting is particularly relevant for probabilistic programming languages and interpreters
+that evaluate arguments before applying a rule at the root.
+
+\textbf{Example.}
+The PTRS $\mathcal{P} = \{\mathsf{g}(x) \to \{\nicefrac{1}{2}:\mathsf{g}(\mathsf{g}(x)),\; \nicefrac{1}{2}:x\}\}$
+has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format PTRS)} \\
+\texttt{(fun g 1)} \\
+\texttt{(prule (g x) (((g (g x)) :prob 1) (x :prob 1)))}
+\end{tabular}
+\end{center}
+Since rewriting only happens at the root, full and innermost rewriting coincide.
+Thus, this symmetric random walk is innermost AST, but not innermost SAST.
+Hence, the best output would be \texttt{WORST\_CASE(Non-SAST,AST)}.
+
+The PTRS $\mathcal{P} = \{\mathsf{f}(x) \to \{\nicefrac{1}{3}:\mathsf{f}(\mathsf{f}(x)),\; \nicefrac{2}{3}:x\}\}$
+has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format PTRS)} \\
+\texttt{(fun f 1)} \\
+\texttt{(prule (f x) (((f (f x)) :prob 1) (x :prob 2)))}
+\end{tabular}
+\end{center}
+Again, all rewrite steps are root steps, so innermost and full rewriting agree.
+Since the walk is biased towards decreasing the number of outermost $\mathsf{f}$ symbols, it is innermost SAST.
+Thus, the best output would be \texttt{WORST\_CASE(?,SAST)}.
+
+The PTRS $\mathcal{P} = \{\mathsf{h}(x) \to \{\nicefrac{2}{3}:\mathsf{h}(\mathsf{h}(x)),\; \nicefrac{1}{3}:x\}\}$
+has the following input syntax:
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format PTRS)} \\
+\texttt{(fun h 1)} \\
+\texttt{(prule (h x) (((h (h x)) :prob 2) (x :prob 1)))}
+\end{tabular}
+\end{center}
+Here innermost rewriting also coincides with full rewriting.
+This random walk is biased towards larger terms and is therefore not innermost AST.
+Hence, the best output would be \texttt{WORST\_CASE(Non-AST,?)}.
