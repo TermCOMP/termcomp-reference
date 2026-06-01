@@ -1,5 +1,6 @@
 \chapter{Introduction}
 \chapterauthor{Florian Frohn}
+\label{chap:intro}
 
 The goal of this document is to serve as the canonical reference for the annual \emph{Termination and Complexity Competition (termCOMP)}.
 %
@@ -73,7 +74,11 @@ The default syntax for results is:
 
 \subsection{Defaults for Scoring in Complexity Analysis}\label{scoring_complexity}
 
-Unless specified otherwise, complexity categories use a combined expression for the worst-case lower and upper bounds on the runtime complexity.
+Unless\comment{FF This part has been moved here, but it uses several notions that have not been defined yet, like ``ITS'' and $rc$.
+  %
+  We have to fix that, or move it back to \Cref{chap:its}.
+  %
+  As we don't have many complexity categories anyway, maybe the latter is the easiest solution.} specified otherwise, complexity categories use a combined expression for the worst-case lower and upper bounds on the runtime complexity.
 %
 The output follows the format:
 \[
@@ -90,14 +95,14 @@ For the lower bound \texttt{LB}, the possible outputs and their semantics are:
       %
       \begin{itemize}
       \item The output \texttt{Omega(n)} is equivalent to \texttt{Omega(n\textasciicircum 1)}.
-      \item The output \texttt{Omega(1)} is equivalent to \texttt{Omega(n\textasciicircum 1)}, which in turn is equivalent \texttt{?}.
+      \item The output \texttt{Omega(1)} is equivalent to \texttt{Omega(n\textasciicircum 0)}, which in turn is equivalent to \texttt{?}.
       \end{itemize}
     \item \texttt{NON\_POLY}: A super-polynomial (e.g., exponential) lower bound.
     \item \texttt{INF}: An infinite lower bound (for non-terminating ITSs, or terminating ITSs with unbounded runtime).
 \end{itemize}
 %
 The corresponding order is \texttt{Omega(n\textasciicircum 0) < Omega(n\textasciicircum 1) < ... < NON\_POLY < INF}.
-%
+
 Similarly, for the upper bound \texttt{UB}, the possible outputs and their semantics are:
 \begin{itemize}
     \item \texttt{?}: No upper bound could be established.

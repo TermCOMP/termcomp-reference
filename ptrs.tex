@@ -58,7 +58,9 @@ has the following input syntax:
 \section{Semantics}
 
 More details about the following definitions and results can be found in \cite{avanzini2018ProbabilisticTermRewriting}
-We write $\mathcal{T}(\F,\V)$ for the set of all terms over a signature $\F = \biguplus_{k \in \N} \F_k$ of function symbols and a set $\V$ of variables.
+We\comment{FF This part is copied from the previous chapter.
+  %
+  We should avoid duplication.} write $\mathcal{T}(\F,\V)$ for the set of all terms over a signature $\F = \biguplus_{k \in \N} \F_k$ of function symbols and a set $\V$ of variables.
 A function symbol $f \in \F_k$ has arity $k$.
 As usual, substitutions, positions, subterms, and contexts are defined exactly as for ordinary TRSs, see \Cref{chap:TRS}.
 
@@ -183,10 +185,12 @@ In other words, the category asks for proofs of AST or of the stronger property 
   {PTRS Standard}
   {PTRS $\mathcal{P}$}
   {Is $\mathcal{P}$ AST or SAST?}
-  {\texttt{WORST\_CASE(}$f$\texttt{,}$g$\texttt{)}, where}
+  {\texttt{WORST\_CASE(}$f$\texttt{,}$g$\texttt{)}, where}\comment{FF In the other chapters, we use $<$ instead of $\sqsubset$.
+    %
+    I think we should use the same notation here for consistency.}
   \begin{align*}
-    &f \in \{\texttt{?} \sqsubseteq \texttt{Non-SAST} \sqsubseteq \texttt{Non-AST}\}\\
-    &g \in \{\texttt{?} \sqsubseteq \texttt{AST} \sqsubseteq \texttt{SAST}\}
+    &f \in \{\texttt{?} \sqsubset \texttt{Non-SAST} \sqsubset \texttt{Non-AST}\}\\
+    &g \in \{\texttt{?} \sqsubset \texttt{AST} \sqsubset \texttt{SAST}\}
   \end{align*}
   and where $f$ is the lower bound and $g$ is the upper bound.
 \end{formalproblem}
@@ -227,7 +231,7 @@ has the following input syntax:
 This random walk is biased towards decreasing the number of outermost $\mathsf{f}$ symbols.
 Hence, every start term has finite expected derivation height, so the system is SAST.
 Thus, the best output would be \texttt{WORST\_CASE(?,SAST)},
-and \texttt{WORST\_CASE(?,?)} is the other possible output.
+and \texttt{WORST\_CASE(?,?)} is the other possible output.\comment{FF What about \texttt{WORST\_CASE(?,AST)}?}
 
 The PTRS $\mathcal{P} = \{\mathsf{h}(x) \to \{\nicefrac{2}{3}:\mathsf{h}(\mathsf{h}(x)),\; \nicefrac{1}{3}:x\}\}$
 has the following input syntax:
@@ -241,7 +245,7 @@ has the following input syntax:
 This random walk is biased towards larger terms and is not AST.
 Therefore, neither AST nor SAST can be certified,
 so the best output would be \texttt{WORST\_CASE(Non-AST,?)},
-and \texttt{WORST\_CASE(?,?)} is the other possible output.
+and \texttt{WORST\_CASE(?,?)} is the other possible output.\comment{FF What about \texttt{WORST\_CASE(Non-SAST,?)}?}
 
 \subsection{PTRS Innermost}
 
