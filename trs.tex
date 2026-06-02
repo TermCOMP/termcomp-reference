@@ -27,7 +27,7 @@ Term rewrite systems have the following syntax.
 
 \bigskip
 Additionally, we have NAT $\in \mathbb{N}$ and IDENTIFIER are intended to be valid SMT-LIB symbols.
-In particular, quoted and unquoted identifiers should not be mixed, and reserved words such as 
+In particular, quoted and unquoted identifiers must not be mixed, and reserved words such as 
 \texttt{fun}, \texttt{rule}, and \texttt{format} must not be used as identifiers.\footnote{FF The definition of valid identifiers should be in \Cref{chap:intro}.}
 Function symbols are declared by \texttt{(fun f n)}, where \texttt{n} is the arity of \texttt{f}.
 Identifiers that are not declared as function symbols are variables.
@@ -47,7 +47,7 @@ The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{a}\}$ has the following input
 
 \subsection{Restrictions}
 
-Terms and rules should\comment{FF I guess we should avoid writing ``should'' for things that are mandatory.} additionally satisfy the following well-formedness conditions.
+Terms and rules must \comment{FF I guess we should avoid writing ``should'' for things that are mandatory.\\JCK Yes, you are right. I changed it to ``must''} additionally satisfy the following well-formedness conditions.
 
 \begin{enumerate}
 \item Every function symbol is declared exactly once.
@@ -57,11 +57,11 @@ Terms and rules should\comment{FF I guess we should avoid writing ``should'' for
 In the categories \emph{TRS Standard}, \emph{TRS Innermost}, \emph{TRS Outermost}, \emph{TRS Derivational Complexity}, 
 \emph{TRS Innermost Derivational Complexity}, \emph{TRS Runtime Complexity}, and \emph{TRS Innermost Runtime Complexity}, rule costs are disallowed.
 The category \emph{TRS Relative} uses the same base syntax, but the cost annotations distinguish strict rules from weak rules.
-Here, ``:cost $0$'' should be used for weak rules and ``:cost $1$'' should be use for strict rules.\comment{FF Again, avoid ``should''.
+Here, ``:cost $0$'' must be used for weak rules and no ``:cost'' declaration must be used for strict rules.\comment{FF Again, avoid ``should''.
   %
   Moreover, do we really want ``:cost $1$'', or do we want no costs at all for non-relative rules?
   %
-  I'm in favor of the latter.}
+  I'm in favor of the latter.\\JCK Ok.}
 
 \section{Semantics}
 
@@ -79,7 +79,8 @@ Substitutions extend homomorphically to terms, i.e., if $t = f(t_1,\ldots,t_k)$,
 For example, if $\sigma(x) = \mathsf{z}$ and $\sigma(y) = \mathsf{s}(\mathsf{z})$, then
 $\mathsf{plus}(\mathsf{s}(x),y)\sigma = \mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(\mathsf{z}))$.
 
-A \emph{rewrite rule} is a pair of terms $\ell \to r$.\comment{FF Maybe we should explicitly said that we don't enforce the variable condition, and that left-hand sides can be variables.} %such that $\ell \notin \V$ and $\mathit{Var}(r) \subseteq \mathit{Var}(\ell)$.
+A \emph{rewrite rule} is a pair of terms $\ell \to r$.\footnote{Note that we do not require $\ell \notin \V$ and $\mathit{Var}(r) \subseteq \mathit{Var}(\ell)$.
+While rules $\ell \to r$ that do not satisfy $\ell \notin \V$ or $\mathit{Var}(r) \subseteq \mathit{Var}(\ell)$ are trivially non-terminating, such rules can be used as ``relative rules'' in the category for relative termination.}\comment{FF Maybe we should explicitly said that we don't enforce the variable condition, and that left-hand sides can be variables.\\JCK Okay. Added a corresponding footnote.} %such that $\ell \notin \V$ and $\mathit{Var}(r) \subseteq \mathit{Var}(\ell)$.
 A \emph{term rewrite system} (TRS) is a finite set $\Rules$ of rewrite rules.
 For example, TRS for the addition of two natural numbers in Peano arithmetic is
 \[
@@ -114,6 +115,10 @@ We define $s \to_\Rules t$ if there exist a position $p \in \mathit{Pos}(s)$,
 a rule $\ell \to r \in \Rules$, and a substitution $\sigma$ 
 such that $s|_p = \ell\sigma$ and $t = s[r\sigma]_p$.
 Its reflexive-transitive closure is denoted by $\to_\Rules^*$.
+Moreover, for any $n \in \mathbb{N}$, we define $\to_\Rules^{n}$ as 
+$\to_\Rules^{0} \;=\; \{(t,t) \mid t \in \mathcal{T}(\F,\V)\}$ and 
+$\to_\Rules^{n+1} \;=\; \to_\Rules^{n} \cdot \to_\Rules$, 
+where ``$\cdot$'' denotes composition of relations.
 For example, $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(\mathsf{z})) 
 \to_{\Rules_{\mathsf{plus}}} \mathsf{s}(\mathsf{plus}(\mathsf{z},\mathsf{s}(\mathsf{z}))) 
 \to_{\Rules_{\mathsf{plus}}} \mathsf{s}(\mathsf{s}(\mathsf{z}))$.
@@ -144,10 +149,11 @@ since every innermost or outermost use of the recursive rule still decreases the
 \subsection{Relative Rewriting}
 
 For two TRSs $\Rules$ and $\mathcal{S}$ over the same signature, 
-the \emph{relative rewrite relation} $\to_{\Rules/\mathcal{S}}$ is defined by\comment{FF Shall we mention that $\cdot$ means composition of relations?}
+the \emph{relative rewrite relation} $\to_{\Rules/\mathcal{S}}$ is defined by\comment{FF Shall we mention that $\cdot$ means composition of relations?\\JCK Ok. I added this statement.}
 \[
   \to_{\Rules/\mathcal{S}} \;=\; \to_{\mathcal{S}}^* \cdot \to_{\Rules} \cdot \to_{\mathcal{S}}^* .
 \]
+Here, ``$\cdot$'' corresponds to the composition of two binary relations again.
 The pair $\Rules/\mathcal{S}$ is \emph{relatively terminating} if $\to_{\Rules/\mathcal{S}}$ is well founded.
 For example, let
 \[
@@ -168,7 +174,7 @@ where strict rules of $\mathcal{R}$ have cost $1$ and weak rules of $\mathcal{S}
 There are two standard notions of complexity for term rewriting: \emph{derivational complexity} and \emph{runtime complexity}.
 For any set $M \subseteq \N$, we write $\sup M$ for its least upper bound, with the convention $\sup \emptyset = 0$.
 For a rewrite relation ${\to} \subseteq \mathcal{T}(\F,\V) \times \mathcal{T}(\F,\V)$, 
-the \emph{derivation height} of a term $t$ w.r.t.\ $\to$ is\comment{FF As we explain the notation for transitive-reflexive closure, we should probably explain the notation for n-fold closure as well.}
+the \emph{derivation height} of a term $t$ w.r.t.\ $\to$ is\comment{FF As we explain the notation for transitive-reflexive closure, we should probably explain the notation for n-fold closure as well.\\JCK Ok. I added this definition above.}
 \[
   \mathit{dh}_{\to}(t) = \sup\{ m \in \N \mid \exists t' \in \mathcal{T}(\F,\V) : t \to^{m} t' \}.
 \]
@@ -223,15 +229,17 @@ The \emph{runtime complexity} of a rewrite relation $\to$ w.r.t.\ $\Rules$ is th
   %
   Are there cases where $\Rules$ doesn't also occur as index of $\to$ / $\ito$?
   %
-  If not, I'd drop the second subscript.}
+  If not, I'd drop the second subscript.\\
+  JCK Yes, the double subscript is indeed ugly. I added a shorthand notation without it.}
 \[
   \mathit{rc}_{\to,\Rules}(n) = \sup\{ \mathit{dh}_{\to_\Rules}(t) \mid t \in \mathcal{T}_{\mathit{B}}^{\mathcal{R}},\ |t| \leq n \}.
 \]
+If $\Rules$ is clear from the context, we simply write $\mathit{rc}_{\to}(n) = \mathit{rc}_{\to,\Rules}(n)$.
 Thus, runtime complexity measures the maximal length of a rewrite sequence starting with a basic term of size at most $n$.
 For example, starting from the basic term $\mathsf{plus}(\mathsf{s}^n(\mathsf{z}),\mathsf{s}^m(\mathsf{z}))$, 
-every rewrite sequence has exactly $n+1$ steps, so $\mathit{rc}_{\to_{\Rules_{\mathsf{plus}}},\Rules_{\mathsf{plus}}}$ is linear.
-For the TRS $\Rules$, its full runtime complexity is $\mathit{rc}_{\to_\Rules,\Rules}$, 
-and its \emph{innermost runtime complexity} $\mathit{rc}_{\ito_{\Rules_{\mathsf{plus}}},\Rules_{\mathsf{plus}}}$ 
+every rewrite sequence has exactly $n+1$ steps, so $\mathit{rc}_{\to_{\Rules_{\mathsf{plus}}}}$ is linear.
+For the TRS $\Rules$, its full runtime complexity is $\mathit{rc}_{\to_\Rules}$, 
+and its \emph{innermost runtime complexity} $\mathit{rc}_{\ito_{\Rules_{\mathsf{plus}}}}$ 
 is defined analogously using $\ito_\Rules$ instead of $\to_\Rules$.
 For $\Rules_{\mathsf{plus}}$, the innermost runtime complexity is the same, 
 since every basic term has a unique innermost rewrite sequence of length determined by the first argument.
