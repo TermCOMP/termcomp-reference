@@ -1,0 +1,45 @@
+\chapter{String Rewriting Systems}\label{chap:SRS}
+\chapterauthor{Dieter Hofbauer and Johannes Waldmann}
+
+\section{Introduction}
+
+
+This chapter describes the syntax and semantics for \emph{String Rewriting Systems} (SRSs).
+
+String rewriting is replacement of sub-strings.
+Each string can be seen as a term.
+For the purposes of the Termination Competition,
+each SRS $R$ is translated to a TRS $T$,
+and the semantics of $R$ is the TRS semantics of $T$.
+
+\textbf{Example.}
+The SRS $R=\{aabb \to bbbaaa\}$
+is translated to the TRS $T=\{a(a(b(b(x_1))))\to b(b(b(a(a(a(x_1))))))\}$
+over signature $\{a/1, b/1\}$ with variable $x_1$.
+
+\section{Syntax}
+
+A SRS  is a TRS (see Section: TRS/Syntax) where
+% \begin{itemize}
+% \item
+the signature contains unary symbols only,
+% \item
+and in  each rule, the variable in the left-hand side is equal to the variable in the right-hand side.
+% \end{itemize}
+
+\textbf{Example.}
+The SRS $R=\{aabb \to bbbaaa\}$ is represented by
+\begin{center}
+\begin{verbatim}
+(format TRS) (fun a 1) (fun b 1)
+(rule (a (a (b (b x1)))) (b (b (b (a (a (a x1))))))) 
+\end{verbatim}
+\end{center}
+
+\section{Semantics}
+
+see Section: TRS/Semantics. All concepts (termination, nontermination),
+modifications (full rewriting, innermost and outermost rewriting, relative rewriting)
+and measures (complexity) do apply.
+In previous Termination Competitions, categories Full Rewriting and Relative Rewriting have been used.
+
