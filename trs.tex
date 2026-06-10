@@ -47,7 +47,7 @@ The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{a}\}$ has the following input
 
 \subsection{Restrictions}
 
-Terms and rules must \comment{FF I guess we should avoid writing ``should'' for things that are mandatory.\\JCK Yes, you are right. I changed it to ``must''} additionally satisfy the following well-formedness conditions.
+Terms and rules must additionally satisfy the following well-formedness conditions.
 
 \begin{enumerate}
 \item Every function symbol is declared exactly once.
@@ -57,11 +57,7 @@ Terms and rules must \comment{FF I guess we should avoid writing ``should'' for 
 In the categories \emph{TRS Standard}, \emph{TRS Innermost}, \emph{TRS Outermost}, \emph{TRS Derivational Complexity}, 
 \emph{TRS Innermost Derivational Complexity}, \emph{TRS Runtime Complexity}, and \emph{TRS Innermost Runtime Complexity}, rule costs are disallowed.
 The category \emph{TRS Relative} uses the same base syntax, but the cost annotations distinguish strict rules from weak rules.
-Here, ``:cost $0$'' must be used for weak rules and no ``:cost'' declaration must be used for strict rules.\comment{FF Again, avoid ``should''.
-  %
-  Moreover, do we really want ``:cost $1$'', or do we want no costs at all for non-relative rules?
-  %
-  I'm in favor of the latter.\\JCK Ok.}
+Here, ``:cost $0$'' must be used for weak rules and no ``:cost'' declaration must be used for strict rules.
 
 \section{Semantics}
 
@@ -80,7 +76,7 @@ For example, if $\sigma(x) = \mathsf{z}$ and $\sigma(y) = \mathsf{s}(\mathsf{z})
 $\mathsf{plus}(\mathsf{s}(x),y)\sigma = \mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(\mathsf{z}))$.
 
 A \emph{rewrite rule} is a pair of terms $\ell \to r$.\footnote{Note that we do not require $\ell \notin \V$ and $\mathit{Var}(r) \subseteq \mathit{Var}(\ell)$.
-While rules $\ell \to r$ that do not satisfy $\ell \notin \V$ or $\mathit{Var}(r) \subseteq \mathit{Var}(\ell)$ are trivially non-terminating, such rules can be used as ``relative rules'' in the category for relative termination.}\comment{FF Maybe we should explicitly said that we don't enforce the variable condition, and that left-hand sides can be variables.\\JCK Okay. Added a corresponding footnote.} %such that $\ell \notin \V$ and $\mathit{Var}(r) \subseteq \mathit{Var}(\ell)$.
+While rules $\ell \to r$ that do not satisfy $\ell \notin \V$ or $\mathit{Var}(r) \subseteq \mathit{Var}(\ell)$ are trivially non-terminating, such rules can be used as ``relative rules'' in the category for relative termination.}
 A \emph{term rewrite system} (TRS) is a finite set $\Rules$ of rewrite rules.
 For example, TRS for the addition of two natural numbers in Peano arithmetic is
 \[
@@ -149,11 +145,10 @@ since every innermost or outermost use of the recursive rule still decreases the
 \subsection{Relative Rewriting}
 
 For two TRSs $\Rules$ and $\mathcal{S}$ over the same signature, 
-the \emph{relative rewrite relation} $\to_{\Rules/\mathcal{S}}$ is defined by\comment{FF Shall we mention that $\cdot$ means composition of relations?\\JCK Ok. I added this statement.}
+the \emph{relative rewrite relation} $\to_{\Rules/\mathcal{S}}$ is defined by
 \[
   \to_{\Rules/\mathcal{S}} \;=\; \to_{\mathcal{S}}^* \cdot \to_{\Rules} \cdot \to_{\mathcal{S}}^* .
 \]
-Here, ``$\cdot$'' corresponds to the composition of two binary relations again.
 The pair $\Rules/\mathcal{S}$ is \emph{relatively terminating} if $\to_{\Rules/\mathcal{S}}$ is well founded.
 For example, let
 \[
@@ -174,7 +169,7 @@ where strict rules of $\mathcal{R}$ have cost $1$ and weak rules of $\mathcal{S}
 There are two standard notions of complexity for term rewriting: \emph{derivational complexity} and \emph{runtime complexity}.
 For any set $M \subseteq \N$, we write $\sup M$ for its least upper bound, with the convention $\sup \emptyset = 0$.
 For a rewrite relation ${\to} \subseteq \mathcal{T}(\F,\V) \times \mathcal{T}(\F,\V)$, 
-the \emph{derivation height} of a term $t$ w.r.t.\ $\to$ is\comment{FF As we explain the notation for transitive-reflexive closure, we should probably explain the notation for n-fold closure as well.\\JCK Ok. I added this definition above.}
+the \emph{derivation height} of a term $t$ w.r.t.\ $\to$ is
 \[
   \mathit{dh}_{\to}(t) = \sup\{ m \in \N \mid \exists t' \in \mathcal{T}(\F,\V) : t \to^{m} t' \}.
 \]
@@ -225,12 +220,7 @@ For example, $\mathsf{plus}(\mathsf{s}(\mathsf{s}(\mathsf{z})),\mathsf{s}(\maths
 whereas $\mathsf{s}(\mathsf{plus}(\mathsf{z},\mathsf{z}))$ is not basic because its root is the constructor $\mathsf{s}$ instead of a defined symbol.
 The term $\mathsf{plus}(\mathsf{plus}(\mathsf{z},\mathsf{z}))$ is also not basic, because it contains two defined symbols.
 
-The \emph{runtime complexity} of a rewrite relation $\to$ w.r.t.\ $\Rules$ is the function\comment{FF The double subscript is really ugly.
-  %
-  Are there cases where $\Rules$ doesn't also occur as index of $\to$ / $\ito$?
-  %
-  If not, I'd drop the second subscript.\\
-  JCK Yes, the double subscript is indeed ugly. I added a shorthand notation without it.}
+The \emph{runtime complexity} of a rewrite relation $\to$ w.r.t.\ $\Rules$ is the function
 \[
   \mathit{rc}_{\to,\Rules}(n) = \sup\{ \mathit{dh}_{\to_\Rules}(t) \mid t \in \mathcal{T}_{\mathit{B}}^{\mathcal{R}},\ |t| \leq n \}.
 \]

@@ -181,10 +181,7 @@ In other words, the category asks for proofs of AST or of the stronger property 
   {PTRS Standard}
   {PTRS $\mathcal{P}$}
   {Is $\mathcal{P}$ AST or SAST?}
-  {\texttt{WORST\_CASE(}$f$\texttt{,}$g$\texttt{)}, where}\comment{FF In the other chapters, we use $<$ instead of $\sqsubset$.
-    %
-    I think we should use the same notation here for consistency.\\JCK
-    Okay, changed the relation to $<$.}
+  {\texttt{WORST\_CASE(}$f$\texttt{,}$g$\texttt{)}, where}
   \begin{align*}
     &f \in \{\texttt{?} < \texttt{Non-SAST} < \texttt{Non-AST}\}\\
     &g \in \{\texttt{?} < \texttt{AST} < \texttt{SAST}\}
@@ -227,7 +224,7 @@ has the following input syntax:
 This random walk is biased towards decreasing the number of outermost $\mathsf{f}$ symbols.
 Hence, every start term has finite expected derivation height, so the system is SAST.
 Thus, the best output would be \texttt{WORST\_CASE(?,SAST)},
-and the other possible outputs are \texttt{WORST\_CASE(?,AST)} and \texttt{WORST\_CASE(?,?)}.\comment{FF What about \texttt{WORST\_CASE(?,AST)}?\\JCK Yes, you are right. Added the missing possible output.}
+and the other possible outputs are \texttt{WORST\_CASE(?,AST)} and \texttt{WORST\_CASE(?,?)}.
 
 The PTRS $\mathcal{P} = \{\mathsf{h}(x) \to \{\nicefrac{2}{3}:\mathsf{h}(\mathsf{h}(x)),\; \nicefrac{1}{3}:x\}\}$
 has the following input syntax:
@@ -241,7 +238,7 @@ has the following input syntax:
 This random walk is biased towards larger terms and is not AST.
 Therefore, neither AST nor SAST can be certified,
 so the best output would be \texttt{WORST\_CASE(Non-AST,?)},
-and the other possible outputs for this PTRS are \texttt{WORST\_CASE(Non-SAST,?)} and \texttt{WORST\_CASE(?,?)}.\comment{FF What about \texttt{WORST\_CASE(Non-SAST,?)}?\\JCK Yes, you are right. Added the missing possible output.}
+and the other possible outputs for this PTRS are \texttt{WORST\_CASE(Non-SAST,?)} and \texttt{WORST\_CASE(?,?)}.
 
 \subsection{PTRS Innermost}
 
