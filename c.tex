@@ -1,0 +1,116 @@
+\chapter{C}
+\chapterauthor{Florian Frohn}
+\label{chap:c}
+
+\section{Introduction}
+
+This chapter describes the syntax and semantics for C programs at termCOMP.
+% 
+As a formal definition of the C semantics is beyond the scope of this document, we build upon the C standard, and resolve ambiguities that (did) arise in the context of the competition as needed.
+
+\section{Syntax}
+
+We consider syntactically valid C99 programs.
+
+\section{Semantics}
+
+We use the semantics of C99, with the following additions, clarifications, and changes:
+
+\begin{itemize}
+\item The starting point is the main function without arguments.
+%
+\item Functions which are only declared, but not defined, are considered to be terminating, have no side effects, and return a non-deterministic value according to the function's return type.
+%
+\item The special (and only declared) function \texttt{\_\_VERIFIER\_nondet\_String()} returns a non-deterministic C String, i.e., a pointer to some freshly allocated memory where the last byte of this allocation is the value \texttt{'\textbackslash 0'} (we may provide a standard implementation for this function, but provers are allowed to hard-code its semantics).
+%
+\item The function \texttt{exit(int)} terminates the execution of the program.
+%
+\item In C, memory-unsafe programs can behave arbitrarily.
+  % 
+  Therefore, neither YES nor NO is a correct result for programs violating memory safety.
+  % 
+  So a proof of memory safety needs to be part of a termination proof.
+  % 
+  If there is interest for that, we could also offer an additional category where memory safety can be assumed and where no programs are allowed which might violate memory safety.
+  % 
+\item We assume integers to be mathematical integers, i.e., over- or underflows cannot occur.
+  % 
+  If there is interest for that, we could also offer an additional category where overflows of unsigned integers are treated as two's complement overflows and where neither YES nor NO is a correct result for programs with overflows of signed integers.
+%
+\item Integer division by negative numbers is assumed to be done by truncation towards zero (as in the C99 standard and no implementation-defined behavior as in the C89 standard).
+  %
+\item We assume that allocation of memory always succeeds, i.e., alloca and malloc never return null pointers and allocation of constant size arrays cannot lead to undefined behavior. Moreover, read access to allocated, but uninitialized memory is assumed to just return a non-deterministic value.
+  % 
+\item We assume the following sizes of primitive data types:
+  \begin{itemize}
+  \item \texttt{bool}: 8 bit
+  \item \texttt{char}: 8 bit
+  \item \texttt{short}: 16 bit
+  \item \texttt{int}: 32 bit
+  \item \texttt{long}: 64 bit
+  \item \texttt{float}: 32 bit
+  \item \texttt{double}: 64 bit
+  \item pointer: 64 bit
+  \end{itemize}
+%
+\item Programs where the evaluation order of operations is not defined according to the C standard and where different execution orders of the operations lead to different resulting states are not allowed.
+  %
+  As an example, the program
+\begin{verbatim}
+int main(){
+    int x = 0;
+    while( x++ == x );
+}
+\end{verbatim}
+  is not allowed since the evaluation order between \texttt{++} and \texttt{==} is not defined according to the C standard and if \texttt{++} is evaluated first, the program terminates whereas it does not if \texttt{==} is evaluated first.
+  %
+  To enable an automatic check for such programs, we disallow all programs \texttt{P} where the execution of \texttt{gcc -c -std=c99 -Wsequence-point P} shows a warning.
+\end{itemize}
+
+\section{Complexity Measure}
+
+The notion of complexity is
+%
+\begin{verbatim}
+#{loop iterations} + #{execution of gotos} + #{function invocations}
+\end{verbatim}
+%
+In this way, we do not have to deal with too many low-level details (like C vs. LLVM).
+%
+The size measure for the arguments is part of the input.
+%
+However, integers are measured by their absolute value, unless specified otherwise.
+
+\section{Competition Categories}
+
+We have categories for termination and complexity:
+
+\subsection{Termination of C}
+
+\begin{formalproblem}
+  {Termination of C}
+  {A C program with a \texttt{main} function without arguments}
+  {If the program admits undefined behavior, then the only valid answer is MAYBE.
+    %
+    Otherwise, the question is: Does \texttt{main} terminate?}
+  {See \hyperref[scoring_termination]{Termination Scoring}}
+\end{formalproblem}
+
+\subsection{Complexity of C}
+
+\begin{formalproblem}
+  {Complexity of C}
+  {A C program \texttt{P}, a function \texttt{f} of \texttt{P}, and a size measure}
+  {What is the asymptotic complexity of \texttt{f} w.r.t.\ the given size measure?}
+  {See \hyperref[scoring_complexity]{Complexity Scoring}}
+\end{formalproblem}
+
+If the given program consists of a single function, then the entry point \texttt{f} can be omitted.
+%
+Integers are measured by their absolute value, unless specified otherwise.
+%
+So if all arguments of \texttt{f} are integers, then the size measure can be omitted as well.
+%
+Currently, all benchmarks consists of a single function with integer arguments only.
+%
+We will fix a formalism for specifying the entry point and size measures as soon as somebody wants to submit more complex benchmarks.

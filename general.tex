@@ -39,9 +39,9 @@ Finally, each category specifies which pairs of results are \emph{conflicting}.
 %
 E.g., for termination, YES and NO are conflicting, and for complexity, the lower bound $n^3$ conflicts with the upper bound $n^2$.
 
-\subsection{Computing Scores}
+\subsection{Conflicts and Incorrect Results}
 
-Based on the given ordered sets of valid results $U$ and $L$, the \emph{score} of each tool is computed uniformly across categories as follows.
+\subsubsection{Resolving Conflicts}
 
 First, the results provided by the tools are checked for conflicts.
 %
@@ -52,6 +52,20 @@ If they fail to do so, the steering committee tries to resolve the conflict.
 If the tool authors / the steering committee concludes that one of the answers is incorrect, then the respective tool gets penalized with the score $-10$, and the incorrect result is disregarded when computing the scores of the other tools (as described below).
 %
 If the conflict cannot be resolved, then the benchmark is excluded from the ranking.
+
+\subsubsection{Resolving Incorrect Results}
+
+Analogously, a tool gets penalized with the score $-10$ if its result turns out to be incorrect even though there is no conflict.
+%
+If a result is identified as possibly incorrect, the author of the corresponding tool is asked to comment.
+%
+If the author's comment does not resolve the problem, the steering committee tries to resolve it.
+%
+If the problem cannot be resolved, the benchmark is excluded from the ranking.
+
+\subsection{Computing Scores}
+
+Based on the given ordered sets of valid results $U$ and $L$, the \emph{score} of each tool is computed uniformly across categories as follows.
 
 Let $u_0,\ldots,u_n \in U$ with $u_i < u_{i+1}$ and $\ell_0,\ldots,\ell_m \in L$ with $\ell_i < \ell_{i+1}$ be the answers that were returned by the tools (excluding duplicates) plus the least elements of $U$ and $L$ (i.e., $u_0 = \min(U)$ and $\ell_0 = \min(L)$).
 %
