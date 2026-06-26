@@ -1,0 +1,461 @@
+\newcommand{\plcode}[1]{%
+  \raisebox{-0.15ex}{\tt\textquotesingle}\texttt{{#1}}%
+  \raisebox{-0.15ex}{\tt\textquotesingle}%
+}
+\newcommand{\pldot}{\plcode{.}}
+\newcommand{\plcomma}{\plcode{,}}
+\newcommand{\ie}{\textit{i.e.}, }
+
+\chapter{Logic Programming}\label{chap:LP}
+\chapterauthor{Étienne Payet}
+
+\section{Introduction}
+
+This chapter describes the syntax and semantics for the
+\emph{Logic Programming} category of the Termination Competition.
+The problems in this category are based on the formalism of
+\emph{logic programming with the leftmost selection rule},
+extended with some syntactic sugar for lists, tuples, and 
+arithmetic operators.
+This formalism is also the basic formalism behind the categories
+\emph{Logic Programming With Cut}~\cite{Schneider-KampGSST10}
+and \emph{Prolog}~\cite{Deransart96,ISO-Prolog95}.
+%
+For more details on the syntax and semantics of logic programming,
+we refer the reader to standard textbooks, for example~\cite{Apt97,Lloyd87}.
+
+\section{Syntax}
+
+Logic programs (LPs) have the following syntax.
+
+\begin{grammar}{LP Syntax}
+  \begin{tabular}{lll}
+  lp & ::= & query clause+ \\
+  query & ::= & {\color{red}\verb+%query:+} IDENTIFIER indicators? {\color{red}\verb+.+} \\
+  indicators & ::= & {\color{red}\verb+(+} indicator ( {\color{red}\verb+,+} indicator )* {\color{red}\verb+)+}\\
+  indicator & ::= & {\color{red}\verb+i+} $|$ {\color{red}\verb+o+} \\
+  clause & ::= & atom {\color{red}\verb+.+} $|$
+  atom {\color{red}\verb+:-+} atom ( {\color{red}\verb+,+} atom )* {\color{red}\verb+.+} \\
+  atom & ::= & IDENTIFIER $|$ IDENTIFIER tuple \\
+  tuple & ::= & {\color{red}\verb+(+} term ( {\color{red}\verb+,+} term )* {\color{red}\verb+)+} \\
+  term & ::= & atom $|$ list $|$ tuple $|$ VAR $|$ NUM $|$ term binop term \\
+  list & ::= & {\color{red}\verb+[]+} $|$
+  {\color{red}\verb+[+} term ( {\color{red}\verb+,+} term )* 
+  ({\color{red}\verb+|+} term)? {\color{red}\verb+]+} \\
+  binop & ::= & {\color{red}\verb-+-} $|$ {\color{red}\verb+-+} $|$ {\color{red}\verb+*+} $|$ {\color{red}\verb+/+} \\
+  \end{tabular}
+\end{grammar}
+
+%\bigskip
+Here, the red colour is used to highlight the symbols of the syntax,
+which are part of the input.
+Moreover, IDENTIFIER and VAR denote finite, non-empty strings over
+letters, digits, and the underscore character (\verb+_+).
+IDENTIFIERs begin with a lowercase letter, whereas VARs begin
+with either an uppercase letter or an underscore. Furthermore,
+NUM denotes a decimal number.
+
+Additionally, comments are allowed in the input. They can be placed anywhere.
+They have two possible forms: they can either start with the symbol \verb+%+
+and end with the next newline character, or they can be enclosed between the
+symbols \verb+/*+ and \verb+*/+. Every valid LP starts with a comment
+of the form \verb+%query: ...+ that specifies the queries of interest, see
+Section~\ref{section:LP-competition} below.
+
+The following are examples of valid LPs. They can be found in the
+directory \texttt{TPDB/Logic\_Programming} of the TPDB~\cite{tpdb}.
+
+\begin{example}[\texttt{talp\_apt/sum.pl}]\label{ex:lp-sum:syntax}
+  % Addition of two natural numbers in Peano arithmetic:
+  \phantom{x}
+  \begin{verbatim}
+%query: sum(o,o,i).
+
+% Addition of two natural numbers in Peano arithmetic.
+sum(X,s(Y),s(Z)) :- sum(X,Y,Z).
+sum(X,0,X).
+  \end{verbatim}
+\end{example}
+
+\begin{example}[\texttt{terminweb\_new/append-ooi.pl}]\label{ex:lp-append:syntax}
+  This example illustrates the use of the list syntax \verb+[...]+.
+  % Append of two lists:
+  \begin{verbatim}
+%query: app(o,o,i).
+
+% Append of two lists.
+app([],X,X).
+app([X|Xs],Ys,[X|Zs]) :- app(Xs,Ys,Zs).
+  \end{verbatim}
+\end{example}
+
+\begin{example}[\texttt{terminweb\_old/balance\_tree.pl}]\label{ex:lp-balance:syntax}
+  This example illustrates the use of the binary operator \verb+-+
+  and the tuple syntax \verb+(...)+.
+  % Balance a binary tree:
+  \begin{verbatim}
+%query: balance(i,o).
+
+% Balance a binary tree.
+balance(T,TB) :-
+  balance(T, I-[], [(TB,I-[])|X]-X, Rest-[], Rest-[]).
+
+balance(nil, X-X, A-B, A-B, [(nil,C-C)|T]-T).
+balance(tree(L,V,R), IH-IT,
+        [(tree(LB,VB,RB),A-D)|H]-[(LB,A-[VB|X]),(RB,X-D)|T],
+        HR-TR, NH-NT) :-
+  balance(L, IH-[V|IT1], H-T, HR1-TR1, NH-NT1),
+  balance(R, IT1-IT, HR1-TR1, HR-TR, NT1-NT).
+  \end{verbatim}
+\end{example}
+
+\begin{example}[\texttt{talp\_talp/evaluate.pl}]\label{ex:lp-evaluate:syntax}
+  This example illustrates the use of the binary operators
+  \verb$+$, \verb+-+, and \verb+*+.
+  % Arithmetic expression evaluator:
+  \begin{verbatim}
+%query: myis(o,i).
+
+% Arithmetic expression evaluator.
+myis(Z, X) :- evaluate(X, Z).
+
+evaluate(X + Y, Z) :-
+        evaluate(X, X1),
+        evaluate(Y, Y1),
+        add(X1, Y1, Z).
+evaluate(X - Y, Z) :-
+        evaluate(X, X1),
+        evaluate(Y, Y1),
+        sub(X1, Y1, Z).
+evaluate(X * Y, Z) :-
+        evaluate(X, X1),
+        evaluate(Y, Y1),
+        mult(X1, Y1, Z).
+evaluate(X, X) :- myinteger(X).
+
+myinteger(s(X)) :- myinteger(X).
+myinteger(0).
+
+add(s(X), Y, s(Z)) :- add(X, Y, Z).
+add(0, X, X).
+
+sub(s(X), s(Y), Z) :- sub(X, Y, Z).
+sub(X, 0, X).
+
+mult(s(X), Y, R) :- mult(X, Y, Z), add(Y, Z, R).
+mult(0, Y, 0).
+  \end{verbatim}
+\end{example}
+
+\section{Semantics}\label{section:LP-semantics}
+
+We use the same definitions and notation as in Section~\ref{section:TRS-semantics}
+for terms and substitutions.
+We write $\mathit{Var}(t)$ for the set of variables occurring in a term $t$.
+A term $t$ is called \emph{ground} if $\mathit{Var}(t) = \varnothing$.
+
+\subsection{Renaming, Variants, and Unification}
+A substitution is called a \emph{renaming} if it is a bijection on the set of variables.
+Two terms $s$ and $t$ are said to be \emph{variants} of each other if there exists a
+renaming $\rho$ such that $t = s\rho$.
+
+Let $s$ and $t$ be two terms. A substitution $\theta$ is a \emph{unifier} of
+$s$ and $t$ if $s\theta = t\theta$. The terms $s$ and $t$ are \emph{unifiable}
+if they admit a unifier. A unifier $\theta$ of $s$ and $t$ is a
+\emph{most general unifier} (mgu) if every unifier of $s$ and $t$ is an instance
+of $\theta$, that is, if for every unifier $\sigma$ there exists a substitution
+$\delta$ such that $\sigma = \theta\delta$.
+If two terms are unifiable, then they admit a most general unifier,
+which is unique up to renaming.
+
+\subsection{Logic Programs}
+We assume that the signature $\F$ contains special symbols called
+\emph{predicate symbols}.
+An \emph{atom} is an expression of the form $p(t_1, \ldots, t_k)$, where
+$p$ is a predicate symbol of arity $k \ge 0$ and $t_1, \ldots, t_k$ are
+terms. In particular, if $k = 0$, then the atom is simply written $p$.
+A \emph{query} is a finite sequence of atoms. We let $\square$ denote
+the empty query.
+A \emph{clause} is an expression of the form $h \leftarrow b_1,\ldots,b_n$,
+where $h,b_1,\ldots,b_n$ are atoms and $n \ge 0$.
+The atom $h$ is called the \emph{head} of the clause, and the query
+$b_1,\ldots,b_n$ its \emph{body}. The body may be empty, in which case
+the clause is called a \emph{fact}. A \emph{logic program} is a finite
+set of clauses.
+
+\begin{example}\label{ex:lp-sum:semantics}
+  The following logic program has the input syntax of Example~\ref{ex:lp-sum:syntax}:
+  \[\left\{
+    \mathsf{sum}(x, \mathsf{s}(y), \mathsf{s}(z)) \leftarrow \mathsf{sum}(x, y, z),\
+    \mathsf{sum}(x, 0, x) \leftarrow \square
+  \right\}\]
+\end{example}
+
+\begin{example}\label{ex:lp-append:semantics}
+  Consider the logic program 
+  \[\left\{
+    \mathsf{app}(\texttt{[]}, x, x) \leftarrow \square,\
+    \mathsf{app}(\pldot(x,\mathit{xs}), \mathit{ys}, \pldot(x,\mathit{zs}))
+    \leftarrow \mathsf{app}(\mathit{xs}, \mathit{ys}, \mathit{zs})
+  \right\}\]
+  where \texttt{[]} is a constant symbol and \pldot{} is
+  a function symbol of arity 2.
+  It has the input syntax of Example~\ref{ex:lp-append:syntax}.
+  Indeed, the list notation \verb+[...]+ is just syntactic sugar for the 
+  Prolog list constructor \pldot. For example,
+  the input \verb+[X|Xs]+ is just a shorthand for \pldot\verb+(X,Xs)+
+  and the input \verb+[a,b]+ is a shorthand for
+  \pldot\verb+(a,+\pldot\verb+(b,[]))+.
+\end{example}
+
+\begin{example}\label{ex:lp-balance:semantics}
+  Consider the term
+  \[\plcomma\left(\mathit{tb},\ -(i,\texttt{[]})\right)\]
+  where $\mathit{tb}$ and $i$ are variables,
+  \texttt{[]} is a constant symbol, and
+  \plcomma{} is a function symbol of arity 2.
+  It has the input syntax \verb+(TB,I-[])+ of
+  Example~\ref{ex:lp-balance:syntax}.
+  Indeed, the tuple notation \verb+(...)+ is just syntactic
+  sugar for the Prolog tuple constructor \plcomma, \ie
+  the input \verb+(TB,I-[])+ is a shorthand for
+  \plcomma\verb+(TB, -(I,[]))+.
+\end{example}
+
+\subsection{Left-Derivations, Left-Termination}
+Throughout this chapter, we consider SLD-resolution with the
+leftmost selection rule. Following the standard terminology
+of the termination literature, the resulting derivations are
+called \emph{left-derivations}.
+
+Let $Q = a_1, \ldots, a_n$ be a non-empty query and $c$ be a clause.
+Let $c' = (h \leftarrow b_1, \ldots, b_m)$ be a variant of $c$,
+variable-disjoint from $Q$. If the leftmost atom $a_1$ and the head
+$h$ are unifiable with mgu $\theta$, then $Q$ is said to \emph{derive}
+the query $Q' = (b_1, \ldots, b_m, a_2, \ldots, a_n)\theta$
+in one \emph{left-derivation step}. This step is denoted by
+$Q \Rightarrow_c^{\theta} Q'$,
+and $c'$ is called its \emph{input clause}.
+
+Let $P$ be a logic program and $Q_0$ be a query. A \emph{left-derivation} of
+$P \cup \{Q_0\}$ is a maximal sequence of left-derivation steps
+$Q_0 \Rightarrow_{c_1}^{\theta_1} Q_1 \Rightarrow_{c_2}^{\theta_2} \ldots$
+where $c_1,c_2, \ldots$ are clauses of $P$ and the \emph{standardization apart}
+condition holds, that is, each input clause used is variable-disjoint from the
+initial query $Q_0$ and from the mgu's and the input clauses of the previous steps.
+%
+% A finite left derivation may end up either with the empty query (then,
+% it is a \emph{successful} left-derivation) or with a non-empty query
+% (then, it is a \emph{failed} left-derivation).
+We say that $P \cup \{Q_0\}$ is \emph{left-terminating}, or equivalently
+that $Q_0$ is left-terminating w.r.t. $P$, if there is no infinite
+left-derivation of $P \cup \{Q_0\}$.
+
+\begin{example}\label{ex:lp-sum:termination}
+  The logic program $P$ of Example~\ref{ex:lp-sum:semantics}
+  consists of the clauses
+  %
+  \begin{align*}
+    c_1 &: \mathsf{sum}(x, \mathsf{s}(y), \mathsf{s}(z)) \leftarrow \mathsf{sum}(x, y, z) \\
+    c_2 &: \mathsf{sum}(x, 0, x) \leftarrow \square
+  \end{align*}
+  %
+  Let $Q_0$ be the query $\mathsf{sum}(x, y, \mathsf{s}(\mathsf{0}))$.
+  The only left-derivations of $P \cup \{Q_0\}$ are:
+  \begin{itemize}
+    \item $Q_0 \Rightarrow_{c_1}^{\theta_1} \mathsf{sum}(x, y_1, \mathsf{0})
+    \Rightarrow_{c_2}^{\theta_2} \square$
+
+    where $\theta_1 = \{x_1/x, y/\mathsf{s}(y_1), z_1/\mathsf{0}\}$
+    and $\theta_2 = \{x/\mathsf{0}, x_2/\mathsf{0}, y_1/0\}$.
+    %
+    \item $Q_0 \Rightarrow_{c_2}^{\theta} \square$
+
+    where $\theta = \{x/\mathsf{s}(\mathsf{0}), y/0, x_1/\mathsf{s}(\mathsf{0})\}$.
+  \end{itemize}
+  (the input clause used at the level $i$ of each derivation is obtained
+  by adding the subscript $i$ to all the variables of the corresponding
+  program clause).
+  Since there is no infinite left-derivation, $P \cup \{Q_0\}$ is left-terminating.
+\end{example}
+
+
+\section{Termination Competition}\label{section:LP-competition}
+
+The Logic Programming category is concerned with the question
+``Are all queries of a given set left-terminating?''.
+
+\begin{formalproblem}
+  {Logic Programming}
+  {A LP $P$ and a set of queries $\mathcal{Q}$}
+  {Are all queries in $\mathcal{Q}$ left-terminating w.r.t. $P$?}
+  {See \hyperref[scoring_termination]{Termination Scoring}}
+\end{formalproblem}
+
+The set of queries $\mathcal{Q}$ is specified in the input
+as a comment of the form
+\begin{center}
+  \texttt{\%query: IDENTIFIER indicators.}
+\end{center}
+Here, \texttt{IDENTIFIER} is the name of a predicate symbol, and
+\texttt{indicators} is an optional sequence %, enclosed in parentheses,
+of indicators, each being either \texttt{i} or \texttt{o}, that
+specifies the input/output mode of the arguments of the predicate symbol.
+The input mode \texttt{i} specifies an argument that must be instantiated
+by a ground term, whereas the output mode \texttt{o} imposes no restriction.
+
+\begin{example}\label{ex:lp-sum:competition}
+  The logic program $P$ of Example~\ref{ex:lp-sum:semantics}
+  has the input syntax of Example~\ref{ex:lp-sum:syntax},
+  where the comment
+  \begin{center}
+    \texttt{\%query: sum(o,o,i).}
+  \end{center}
+  specifies the set 
+  $\mathcal{Q} = \left\{\mathsf{sum}(t_1, t_2, t_3) \mid
+  t_1, t_2, t_3 \in \mathcal{T}(\F,\V), \
+  t_3 \text{ is ground}\right\}$.
+  Every left-derivation step decreases the number of
+  occurrences of the symbol $\mathsf{s}$ in the third
+  argument of $\mathsf{sum}$, and thus there is no infinite
+  left-derivation of $P \cup \{Q_0\}$ for any query $Q_0$
+  in $\mathcal{Q}$. Hence, the best output would be \texttt{YES}.
+\end{example}
+
+\begin{example}[\texttt{TPDB/Logic\_Programming/Payet\_22/payet-nonloop-1.pl}]\label{ex:lp-payet22:competition}
+  \phantom{x}
+
+  \noindent
+  Let $P$ be the logic program that consists of the clauses
+  \begin{align*}
+    c_1 &: \mathsf{p}(\mathsf{0}, y) \leftarrow \mathsf{p}(\mathsf{s}(y), \mathsf{s}(y)) \\
+    c_2 &: \mathsf{p}(\mathsf{s}(x), y) \leftarrow \mathsf{p}(x, y)
+  \end{align*}
+  It has the input syntax:
+  \begin{verbatim}
+%query: p(i,i).
+
+p(0, Y) :- p(s(Y), s(Y)).
+p(s(X), Y) :- p(X, Y).
+  \end{verbatim}
+  where the comment
+  \begin{center}
+    \texttt{\%query: p(i,i).}
+  \end{center}
+  specifies the set of queries
+  $\mathcal{Q} = \left\{\mathsf{p}(t_1, t_2) \mid
+  t_1 \text{ and } t_2 \text{ are ground terms}\right\}$.
+  This set contains the query $Q_0 = \mathsf{p}(\mathsf{0}, \mathsf{0})$,
+  and $P \cup \{Q_0\}$ is not left-terminating.
+  Indeed, there is an infinite left-derivation of $P \cup \{Q_0\}$ that
+  starts as follows
+  (for the sake of simplicity, we omit the mgu used at each step):
+  \[\mathsf{p}(\mathsf{0}, \mathsf{0}) \Rightarrow_{c_1}
+  \mathsf{p}(\mathsf{s}(\mathsf{0}), \mathsf{s}(\mathsf{0})) \Rightarrow_{c_2}
+  \mathsf{p}(\mathsf{0}, \mathsf{s}(\mathsf{0})) \Rightarrow_{c_1}
+  \mathsf{p}(\mathsf{s}^2(\mathsf{0}), \mathsf{s}^2(\mathsf{0})) \Rightarrow_{c_2}
+  \cdots\]
+  Hence, the best output would be \texttt{NO}.
+\end{example}
+
+If the arity of the predicate symbol \texttt{IDENTIFIER} is $0$
+then no indicators are needed and the parentheses are omitted,
+as in the following example.
+
+%\newpage
+\begin{example}[\texttt{TPDB/Logic\_Programming/talp\_apt/lte.pl}]\label{ex:lp-lte:competition}
+  \phantom{x}
+  \begin{verbatim}
+%query: goal.
+
+even(s(s(X))) :- even(X).
+even(0).
+
+lte(s(X),s(Y)) :- lte(X,Y).
+lte(0,Y).
+
+goal :- lte(X,s(s(s(s(0))))), even(X).
+  \end{verbatim}
+  Here, the comment
+  \begin{center}
+    \texttt{\%query: goal.}
+  \end{center}
+  specifies the set of queries $\mathcal{Q} = \left\{\mathsf{goal}\right\}$.
+\end{example}
+
+
+\subsection{The Occurs-Check}
+
+The occurs-check is a part of algorithms for unification.
+It causes unification of a variable $x$ and a term $t$
+to fail if $t$ contains $x$ and $t$ is not equal to $x$.
+For efficiency reasons, most
+Prolog implementations do not perform the occurs-check, and 
+instead they allow the construction of cyclic terms, which are
+infinite terms that contain themselves as subterms. This can
+lead to different termination behavior, as illustrated by the
+following example.
+In the \emph{Logic Programming} category of the
+Termination Competition, the best output must be computed under
+the assumption that the occurs-check is performed.
+
+\begin{example}\label{ex:lp-occurs-check:competition}
+  Let $P$ be the logic program that consists of the clauses
+  \begin{align*}
+    c_1 &: \mathsf{p}(x) \leftarrow \mathsf{q}(x,x) \\
+    c_2 &: \mathsf{q}(\mathsf{f}(y),y) \leftarrow \mathsf{p}(y)
+  \end{align*}
+  It has the input syntax:
+  \begin{verbatim}
+%query: p(o).
+p(X) :- q(X, X).
+q(f(Y), Y) :- p(Y).
+  \end{verbatim}
+  where the comment
+  \begin{center}
+    \texttt{\%query: p(o).}
+  \end{center}
+  specifies the set of queries
+  $\mathcal{Q} = \left\{\mathsf{p}(t) \mid
+  t \in \mathcal{T}(\F,\V)\right\}$.
+  \begin{itemize}
+    \item Suppose that the occurs-check is performed.
+    Let $Q_0$ be any element of $\mathcal{Q}$. Then, $Q_0$ has the form
+    $\mathsf{p}(t_0)$ for some term $t_0$.
+    We have the left-derivation step
+    $Q_0 \Rightarrow_{c_1} \mathsf{q}(t_0,t_0)$
+    (we omit the mgu). Let $y'$ be a fresh variable
+    and let $c_2'$ be the variant of $c_2$ obtained by
+    replacing $y$ with $y'$.
+    Resolving the query $\mathsf{q}(t_0,t_0)$ against the clause
+    $c_2$ with the input clause $c_2'$ requires unifying $\mathsf{q}(t_0,t_0)$
+    with $\mathsf{q}(\mathsf{f}(y'),y')$, which yields the equations
+    $t_0=\mathsf{f}(y')$ and $t_0=y'$, hence $y'=\mathsf{f}(y')$.
+    As the occurs-check is performed, this unification fails and
+    the derivation finitely fails.
+    Consequently, as $Q_0$ denotes any element of $\mathcal{Q}$,
+    the best output would be \texttt{YES}.
+
+    \item Now, suppose that the occurs-check is not performed.
+    Let $Q_0 = \mathsf{p}(\mathsf{f}(z))$. Then, $Q_0$ is an element
+    of $\mathcal{Q}$, and we have the left-derivation step
+    $Q_0 \Rightarrow_{c_1} \mathsf{q}(\mathsf{f}(z),\mathsf{f}(z))$.
+    % (we omit the mgu).
+    Resolving the query $\mathsf{q}(\mathsf{f}(z),\mathsf{f}(z))$
+    against the clause $c_2$ requires unifying
+    $\mathsf{q}(\mathsf{f}(z),\mathsf{f}(z))$ with
+    $\mathsf{q}(\mathsf{f}(y),y)$, which yields the equations
+    $\mathsf{f}(z)=\mathsf{f}(y)$ and $\mathsf{f}(z)=y$,
+    hence $y=\mathsf{f}(y)$.
+    %
+    As the occurs-check is not performed, the unification succeeds
+    by constructing a cyclic term. The remaining query is
+    $Q_1 = \mathsf{p}(y)\theta$, where $\theta=\{y/\mathsf{f}(y)\}$,
+    \ie $Q_1 = \mathsf{p}(\mathsf{f}(y))$,
+    where $y$ satisfies the equation $y=\mathsf{f}(y)$.    
+    Resolving $Q_1$ again against $c_1$ and $c_2$ yields a query
+    of the same form (up to renaming). Repeating this reasoning
+    indefinitely yields an infinite derivation.
+    Hence, the best output would be \texttt{NO}.
+  \end{itemize}
+\end{example}
