@@ -13,7 +13,8 @@
 \usepackage{nicefrac}
 
 \theoremstyle{theorem}\newtheorem{theorem}{Theorem}
-\theoremstyle{definition}\newtheorem{example}[theorem]{Example}
+\theoremstyle{definition}\newtheorem{example}{Example}[chapter]
+\theoremstyle{definition}\newtheorem*{motivation}{Motivation}
 
 \newcommand{\CC}{\mathcal{C}}
 \newcommand{\N}{\mathbb{N}}
@@ -71,7 +72,7 @@
 \renewcommand{\comment}[1]{\footnote{!!! #1}}
 
 \usepackage{amsthm}
-\newtheorem{definition}{Definition}
+\newtheorem{definition}{Definition}[chapter]
 
 %TRS
 \newcommand{\ito}{\mathrel{\smash{\stackrel{\raisebox{2pt}{$\scriptscriptstyle \mathbf{i}\:$}}{\smash{\rightarrow}}}}}
@@ -154,6 +155,9 @@
 \input{general}
 \input{trs}
 \input{srs}
+\input{cstrs}
+\input{ctrs}
+\input{etrs}
 \input{ptrs}
 \input{stcrs}
 \input{its}

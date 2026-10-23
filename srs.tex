@@ -12,10 +12,11 @@ For the purposes of the Termination Competition,
 each SRS $R$ is translated to a TRS $T$,
 and the semantics of $R$ is the TRS semantics of $T$.
 
-\textbf{Example.}
+\begin{example}
 The SRS $R=\{aabb \to bbbaaa\}$
 is translated to the TRS $T=\{a(a(b(b(x_1))))\to b(b(b(a(a(a(x_1))))))\}$
 over signature $\{a/1, b/1\}$ with variable $x_1$.
+\end{example}
 
 \section{Syntax}
 
@@ -27,7 +28,7 @@ the signature contains unary symbols only,
 and in  each rule, the variable in the left-hand side is equal to the variable in the right-hand side.
 % \end{itemize}
 
-\textbf{Example.}
+\begin{example}
 The SRS $R=\{aabb \to bbbaaa\}$ is represented by
 \begin{center}
 \begin{verbatim}
@@ -35,6 +36,7 @@ The SRS $R=\{aabb \to bbbaaa\}$ is represented by
 (rule (a (a (b (b x1)))) (b (b (b (a (a (a x1))))))) 
 \end{verbatim}
 \end{center}
+\end{example}
 
 \section{Semantics}
 

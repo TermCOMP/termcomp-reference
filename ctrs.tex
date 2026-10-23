@@ -1,0 +1,233 @@
+\chapter{Conditional Rewriting}\label{chap:CTRS}
+\chapterauthor{Ra\'ul Guti\'errez and Salvador Lucas}
+
+\section{Introduction}
+
+In \emph{conditional rewriting}~\cite{kaplan1984ConditionalRewriteRules}, the application of a (conditional) rewrite rule $\ell\to r\Leftarrow c$ to a term $s$ at a position $p$ depends not only on the (successful) matching $s|_p=\sigma(\ell)$ of the subterm $s|_p$ of $s$ at position $p$ against the left-hand side $\ell$ of the rule, but also on the conditional part $c$ which must be \emph{satisfied} by the matching substitution $\sigma$.
+%
+Furthermore, there are several approaches to solve such a satisfiability problem, see \cite[Chapter~7]{ohlebusch2002AdvancedTopicsTerm}.
+%
+\begin{example}
+Consider the following  (ground) rules
+\begin{eqnarray}
+a & \to & b\label{ExCTRS_rule1}
+\\
+c & \to & d \Leftarrow b \approx a\label{ExCTRS_rule2}
+\end{eqnarray}
+%
+Term $c$ can be rewritten with rule (\ref{ExCTRS_rule2}) depending on the \emph{interpretation} we give to $\approx$.
+\begin{enumerate}
+\item If $\approx$ is interpreted as \emph{rewriting in $0$ or more steps}, i.e., $\approx$ is actually $\to^*$, then $c$ \emph{cannot be rewritten} as $b$ is irreducible and the condition $b\to^*a$ cannot be satisfied.
+ \item If $\approx$ is interpreted as \emph{conversion}, i.e., $\approx$ is actually $\leftrightarrow^*$, then $c$ \emph{rewrites} to $d$, as $b\leftarrow a$ holds due to rule (\ref{ExCTRS_rule1}).
+\end{enumerate}
+\end{example}
+%
+A Conditional Term Rewriting System (CTRS) ${\cal R}$ is a pair $({\cal F},R)$, where ${\cal F}$ is a signature of function symbols and $R$ is a set of (possibly) conditional rules.
+
+
+\section{Syntax}
+
+Conditional Term Rewriting Systems have the following syntax.
+
+\begin{grammar}{CTRS Syntax}
+  \begin{tabular}{lll}
+  trs & ::= & \texttt{(format CTRS} cond-type\texttt{)} fun* rule* \\
+  cond-type & ::= & \texttt{oriented} $|$ \texttt{join} $|$ \texttt{semi-equational} \\
+  fun & ::= & \texttt{(fun} IDENTIFIER NAT\texttt{)} \\
+  term & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER term+\texttt{)} \\
+  cost & ::= & \texttt{:cost} NAT \\
+  rule & ::= & \texttt{(rule} term term cond* cost?\texttt{)}\\
+  cond & ::= & \texttt{(=} term term\texttt{)}
+  \end{tabular}
+\end{grammar}
+
+NAT and IDENTIFIER retain the same meaning as in \Cref{chap:TRS}.
+
+Rules can appear in one of the following ways:
+
+\begin{itemize}
+  \item \texttt{(rule l r)}, where \texttt{l} and \texttt{r} are terms, for unconditional rules.
+  \item \texttt{(rule l r cond1 cond2 \ldots)}, where \texttt{l} and \texttt{r} are terms and \texttt{cond}$i$ are reachability/joinability/semi-equational goals, for conditional rules.
+\end{itemize}
+
+Identifiers that are not declared as function symbols are variables.
+
+\subsection{Restrictions}
+
+Terms and rules must additionally satisfy the following well-formedness conditions.
+\begin{enumerate}
+    \item Every function symbol is declared exactly once.
+    \item Function symbols are always used with their declared arity.
+    \item Left-hand side of rules cannot be variable terms.
+\end{enumerate}
+
+Variables appearing in right-hand sides need not appear in the corresponding left-hand sides. At present, the termination competition supports only \texttt{oriented} CTRSs.
+
+\section{Semantics}
+
+In the operational description of conditional rewriting, we follow a \emph{logic-based approach} (see, e.g., \cite{plaisted1988LogicConditionalTerm,meseguer1992ConditionalRewritingLogic}), considering one-step and many-step rewritings as atoms $s\to t$ and $s\to^* t$ which are proved with respect to an inference system ${\cal I}$ as with Smullyan's \emph{elementary formal systems}~\cite{smullyan1961TheoryFormalSystems}.
+%
+A \emph{finite proof tree} $T$ in  ${\cal I}$
+with root $G$ (an atom) is either:
+\begin{itemize}
+\item 
+%(i) 
+an \emph{open goal}, simply denoted as $G$; 
+or
+\item 
+%(ii) 
+a \emph{derivation tree} %with root $G$, 
+denoted as
+$
+\frac{T_1 \quad \cdots \quad T_n}{G}(\rho)
+$,
+where %$G \in \mathit{Form}(\mathcal{S})$,
+%$G$ is as above, 
+$T_1$,\ldots,$T_n$ are finite proof trees in ${\cal I}$ (for $n\geq 0$; if $n=0$ instead of 
+$\frac{}{G}(\rho)$
+we just write
+$\overline{G}$), and 
+$\rho : \frac{B_{1} \cdots  B_{n}}{B}\in{\cal I}$ is an (elementary) inference rule
+% from $\GLinferenceOf{\cR}$,
+(i.e., $B_1,\ldots,B_n$ and $B$ are atoms) 
+such that
+%\[
+%\frac{\rootTree(T_1) \quad \cdots \quad \rootTree(T_n)}{G}
+%\]
+$G = \sigma(B)$, and
+$root(T_1)=\sigma(B_{1}), \ldots, root(T_n)=\sigma(B_{n})$
+for some substitution $\sigma$. % \in\mathit{Sub}(\mathcal{S})$.
+\end{itemize}
+%
+%\begin{remark}[Rules in $\GLinference$ are generic]
+%\label{RemGenericityOfInferenceRules}
+Note %from the previous statement 
+that 
+inference rules $\frac{B_{1} \cdots  B_{n}}{B}$
+in ${\cal I}$ are viewed
+as \emph{schemes of rules} where $B$ should \emph{match} the goal $G$
+with matching substitution $\sigma$.
+%\end{remark}
+%
+A finite proof tree $T$ is \emph{closed} if it %whenever it is finite and 
+contains no open goals.
+%
+\begin{definition}[Provable atom]\label{DefProbableGoal}
+An atom $G$ is \emph{provable} in ${\cal I}$, %written 
+%$\proofInISof{\GLinference}{\GLatom}$,
+if there is a closed proof tree $T$ with $root(T)=G$ using ${\cal I}$.
+\end{definition}
+
+%
+\begin{figure}[t]
+\begin{gather*}
+(\emph{Rf})\ \frac{}{x \rightarrow^{\ast} x}
+\qquad\qquad
+(\emph{Co})\ \frac{x \rightarrow y\qquad y \rightarrow^{*} z}{x \rightarrow^{*} z}
+\\[0.3cm]
+(\emph{Pr})_{f,i}\ \frac{x_i \rightarrow y_i}{f(x_{1},\ldots,x_{i},\ldots,x_{k})\rightarrow f(x_{1},\ldots,y_{i},\ldots,x_{k})}
+\\[0.3cm]
+(\emph{Rl})_{\ell \to r \Leftarrow s_1\approx t_1,\ldots,s_n\approx t_n}\ \frac{s_1\to^*t_1\quad \cdots \quad s_n\to^*t_n}{\ell \rightarrow r}
+\end{gather*}
+\caption{Generic Inference rules for conditional rewriting (\emph{oriented} CTRSs)}
+\label{FigInferenceRulesForConditionalRewriting}
+\end{figure}
+%
+For \emph{oriented} CTRSs ${\cal R}=({\cal F},R)$, where conditions $u\approx v$ in rules from $R$ are always interpreted as reachability goals $u\to^*v$, such an inference system is built from the generic rules in Figure \ref{FigInferenceRulesForConditionalRewriting} as follows:
+\begin{eqnarray*}
+{\cal I}({\cal R}) & = & \{(\emph{Rf}),(\emph{Co})\}\cup\{(\emph{Pr})_{f,i}\mid f\in{\cal F}, 1\leq i\leq ar(f)\}\cup\{(\emph{Rl})_\alpha\mid\alpha\in R\}
+\end{eqnarray*}
+%
+Now, we say that $s$ rewrites to $t$ in ${\cal R}$, written $s\to_{\cal R}t$ if there is a well-formed proof tree for the atomic goal $s\to t$ in 
+${\cal I}({\cal R})$.
+
+It is well-known that,  in general, it is undecidable whether a \emph{single} conditional rewriting step $s\to_{\cal R} t$ can be issued.
+%
+In the proof-theoretical description of conditional rewriting above, this has to do with the possibility of having \emph{infinite proof trees} for an atomic goal $s\to t$.
+%
+From a termination point of view this led to the notion of \emph{operational termination}~\cite{lucas2005OperationalTerminationConditional}. 
+%
+\begin{definition}
+A CTRS ${\cal R}$ is \emph{operationally terminating} if no goal $s\to t$ has an associated infinite proof tree in ${\cal I}({\cal R})$.
+\end{definition}
+%
+The notion of \emph{termination} of a CTRS remains as usual: 
+\begin{definition}
+A CTRS ${\cal R}$ is \emph{terminating} if there is no infinite sequence $t\to_{\cal R}t'\to_{\cal R}\cdots$ of conditional rewriting steps.
+\end{definition}
+%
+Operational termination implies termination but not vice versa.
+
+\begin{example}
+The following (oriented) CTRS
+\begin{eqnarray}
+a & \to & b \Leftarrow a \approx b
+\end{eqnarray}
+is \emph{terminating} (the one-step rewrite relation is empty), but it is \emph{not operationally terminating}, as there is an infinite proof tree for $a\to b$ using ${\cal I}({\cal R})$ as above:
+\[
+\dfrac{\dfrac{\dfrac{\vdots}{a \to b} \quad \overline{b \to^* b}}{a \to^{*} b}}{a \to b}
+\]
+\end{example}
+
+\section{Competition Categories}
+
+The CTRS formalism is used by the following categories.
+
+\subsection{CTRS Termination}
+
+The CTRS Termination category is concerned with the question 
+``Are there infinite sequences of conditional rewriting steps?''.
+%
+%In other words, does every computation defined by the conditional rewrite rules eventually reach an irreducible term? 
+
+\begin{motivation}
+Although guaranteeing operational termination is the most appropriate situation for a practical use of CTRSs, termination is also important to prove other important properties of conditional rewriting, remarkably \emph{confluence}. 
+%
+The well-known characterization, by Knuth-Bendix and Huet, of confluence of terminating TRSs ${\cal R}$ as the joinability of all its critical pairs  also holds for CTRSs, provided that conditional critical pairs are considered together with the so-called \emph{Conditional Variable Pairs}~\cite{lucas2024LocalConfluenceConditional}.
+%
+Since termination is \emph{weaker} than operational termination, for the purpose of, e.g., proving confluence as explained above, it is better to try to prove termination than operational termination of CTRSs.
+\end{motivation}
+
+\begin{formalproblem}
+  {CTRS Termination}
+  {CTRS $\Rules$}
+  {Does $\Rules$ terminate?}
+  {See \hyperref[scoring_termination]{Termination Scoring}}
+\end{formalproblem}
+
+\begin{example}
+The CTRS $\mathcal{R} = \{a \rightarrow b \Leftarrow f(a) \approx b\}$ has the following input syntax:
+
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format CTRS oriented)} \\
+\texttt{(fun f 1)} \\
+\texttt{(fun a 0)} \\
+\texttt{(fun b 0)} \\
+\texttt{(rule a b (= (f a) b))}
+\end{tabular}
+\end{center}
+
+and is terminating.
+\end{example}
+
+\subsection{CTRS Operational Termination}
+
+The CTRS Operational Termination category is concerned with the question 
+``Are there infinite proof trees for conditional rewriting steps?''. 
+
+\begin{motivation}
+For the user of a CTRS, operational termination provides important advantages which do \emph{not} follow from termination.
+%
+In particular, operational termination guarantees decidability of rewriting goals.
+\end{motivation}
+\begin{formalproblem}
+  {CTRS Operational Termination}
+  {CTRS $\Rules$}
+  {Is $\Rules$ operationally terminating?}
+  {See \hyperref[scoring_termination]{Termination Scoring}}
+\end{formalproblem}
+
+\begin{example}
+The terminating CTRS $\mathcal{R}$ from the previous section, which has the same input syntax, is not operationally terminating, as it can generate an infinite proof tree.
+\end{example}

@@ -1,0 +1,118 @@
+\chapter{Context-Sensitive Rewriting}\label{chap:CSTRS}
+\chapterauthor{Ra\'ul Guti\'errez and Salvador Lucas}
+
+\section{Introduction}
+
+In Context-Sensitive Rewriting (CSR)~\cite{lucas2020ContextSensitiveRewriting}, given a signature of function symbols ${\cal F}$, a replacement map $\mu$ selects the indices $\mu(f)\subseteq\{1,\ldots,k\}$ of arguments of $k$-ary function symbols $f\in{\cal F}$ which can be rewritten.
+%
+\begin{example}
+The usual \emph{if-then-else} operator of rewriting-based languages like Haskell~\cite{hudak1992ReportProgrammingLanguage} or Maude~\cite{clavel2007AllAboutMaude} has three arguments: a boolean condition in the first argument which enables the selection of the second or third argument depending on the evaluation of the boolean condition (to true or false, respectively).
+%
+The use of a replacement map given by $\mu(\text{if-then-else})=\{1\}$ \emph{forbids} rewritings on the second and third argument until the evaluation of the boolean condition finishes, hopefully producing a boolean value to continue the evaluation.
+\end{example}
+
+This leads to a restriction 
+$\hookrightarrow_{\cal R,\mu}$ of the rewrite relation $\to_{\cal R}$ associated to a given (variant of) rewrite system ${\cal R}$, i.e., 
+$\hookrightarrow_{\cal R,\mu}\:\subseteq\:\to_{\cal R}$.
+%
+Termination of $\to_{\cal R}$ clearly implies that of $\hookrightarrow_{\cal R,\mu}$, but not vice versa.
+%
+The focus of the subcategory of TermCOMP for CSR is proving and disproving termination of $\hookrightarrow_{\cal R,\mu}$.
+%
+In this respect, we consider the notion of a \emph{Context-Sensitive Term Rewriting System} (CS-TRS) as a triple ${\cal R}=({\cal F},\mu,R)$, where ${\cal F}$ is a signature, $\mu$ is a replacement map for the signature, and R is a set of rules.
+%
+We often say that a CS-TRS is terminating if 
+$\hookrightarrow_{{\cal R},\mu}$ is, i.e., no term initiates an infinite sequence of $\hookrightarrow_{{\cal R},\mu}$-steps.
+
+
+\section{Syntax}
+
+Context-Sensitive Term Rewriting Systems have the following syntax.
+
+\begin{grammar}{CS-TRS Syntax}
+  \begin{tabular}{lll}
+  trs & ::= & \texttt{(format CSTRS)} fun* rule* \\
+  fun & ::= & \texttt{(fun} IDENTIFIER NAT rmap?\texttt{)}\\
+  term & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER term+\texttt{)} \\
+  cost & ::= & \texttt{:cost} NAT \\
+  rule & ::= & \texttt{(rule} term term cost?\texttt{)} \\
+  rmap & ::= & \texttt{:replacement-map (}NAT*\texttt{)}
+  \end{tabular}
+\end{grammar}
+
+NAT and IDENTIFIER retain the same meaning as in \Cref{chap:TRS}.
+
+Function symbols can be declared in one of the following ways:
+
+\begin{itemize}
+  \item \texttt{(fun f n :replacement-map (natlist))}, where \texttt{n} is the arity of \texttt{f} and \texttt{natlist} is a possibly empty list of natural numbers indicating the argument positions of \texttt{f} in which rewriting is allowed.
+  \item \texttt{(fun f n)}, where \texttt{n} is the arity of \texttt{f}, in this case, rewriting is allowed in all argument positions.
+\end{itemize}
+
+Identifiers that are not declared as function symbols are variables.
+
+\subsection{Restrictions}
+
+Terms and rules must additionally satisfy the following well-formedness conditions.
+\begin{enumerate}
+    \item Every function symbol is declared exactly once.
+    \item Function symbols are always used with their declared arity.
+    \item A replacement map is a possibly empty list of natural numbers in the range $[1..n]$, in ascending order, where $n$ is the arity of the corresponding function symbol.
+    \item Left-hand side of rules cannot be variable terms.
+    \item No extra variables allowed in rules.
+\end{enumerate}
+
+\section{Semantics}
+
+The syntactic replacement restrictions on the arguments of function symbols of a signature ${\cal F}$ introduced by a replacement map $\mu$ are lifted to the structure of terms of the signature. The set of positions ${\cal P}os(t)$ of a term $t$ which are used to address subterms $t|_p$ of a term $t$ for some $p\in{\cal P}os(t)$ are \emph{decomposed} into \emph{active} positions (denoted ${\cal P}os^\mu(t)$) which can be rewritten, and \emph{frozen} positions (denoted $\overline{{\cal P}os}^\mu(t)$), where rewritings are \emph{disallowed}.
+
+Given a Term Rewriting System ${\cal R}=({\cal F},R)$ over a signature ${\cal F}$ with a set of rules $R$, and a replacement map $\mu$ for ${\cal F}$, a term $s$ \emph{$\mu$-rewrites} to a term $t$ at position $p$, written 
+$s\stackrel{p}{\hookrightarrow}_{{\cal R},\mu} t$ (or $s\hookrightarrow_{{\cal R},\mu} t$, 
+or just $s\hookrightarrow t$ if no confusion arises), if $s$ rewrites to $t$ at an active position $p$, i.e., $s\stackrel{p}{\to}_{\cal R}t$ and 
+$p\in{\cal P}os^\mu(s)$.
+%
+Accordingly, we say that ${\cal R}$ is $\mu$-terminating if $\hookrightarrow_{{\cal R},\mu}$ is a terminating relation.
+
+\section{Competition Categories}
+
+The CS-TRS formalism is used by the following category.
+
+\subsection{CS-TRS Standard}
+
+The CS-TRS Standard category is concerned with the question ``Will every sequence of context-sensitive rewriting steps eventually stop?''. 
+
+\begin{motivation}
+Termination of CSR is weaker than termination for the same underlying TRS.
+%
+If a TRS ${\cal R}$ is terminating, then CSR is also terminating for any replacement map $\mu$.
+%
+If CSR is terminating for a TRS ${\cal R}$, computations with CSR starting from a term $s$ may stop giving term $t$ which CSR cannot further reduce but which \emph{is not a normal form}.
+%
+However, under some conditions, the obtained irreducible terms (with respect to CSR) are head-normal forms, i.e., the root symbol of $t$ remains the same under further unrestricted rewritings~\cite{lucas2002ContextSensitiveRewritingStrategies}.
+\end{motivation}
+
+\begin{formalproblem}
+  {CS-TRS Standard}
+  {CS-TRS $\Rules$}
+  {Does CSR terminate for ${\cal R}$?}
+  {See \hyperref[scoring_termination]{Termination Scoring}}
+\end{formalproblem}
+
+\begin{example}
+The CS-TRS $\mathcal{R} = \{first(0,x) \rightarrow nil, first(s(x), cons(y,z)) \rightarrow cons(y, first(x,z)), from(x) \rightarrow cons(x, from(s(x)))\}$, where $\mu(cons) = \{1\}$ and $\mu(f) = \{1,\ldots,arity(f)\}$ otherwise, has the following input syntax:
+
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format CSTRS)} \\
+\texttt{(fun first 2)} \\
+\texttt{(fun |0| 0)} \\
+\texttt{(fun nil 0)} \\
+\texttt{(fun s 1)} \\
+\texttt{(fun cons 2 :replacement-map (1))} \\
+\texttt{(fun from 1)} \\
+\texttt{(rule (first |0| x) nil)} \\
+\texttt{(rule (first (s x) (cons y z)) (cons y (first x z)))} \\
+\texttt{(rule (from x) (cons x (from (s x))))}
+\end{tabular}
+\end{center}
+\end{example}

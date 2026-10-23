@@ -1,0 +1,132 @@
+\chapter{Equational Rewriting}\label{chap:ETRS}
+\chapterauthor{Ra\'ul Guti\'errez and Salvador Lucas}
+
+\section{Introduction}
+
+An Equational Term Rewriting System (ETRS) is a tuple $({\cal F},E,R)$, where 
+${\cal F}$ is a signature of function symbols,
+$E$ is a set of (unconditional) equations, and
+$R$ is a set of (unconditional) rewrite rules~\cite{jouannaud1983ConfluentCoherentEquational}.
+
+
+\section{Syntax}
+
+Equational Term Rewriting Systems have the following syntax.
+
+\begin{grammar}{ETRS Syntax}
+  \begin{tabular}{lll}
+  trs & ::= & \texttt{(format ETRS)} fun* rule* \\
+  fun & ::= & \texttt{(fun} IDENTIFIER NAT theory?\texttt{)} \\
+  term & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER term+\texttt{)} \\
+  cost & ::= & \texttt{:cost} NAT \\
+  rule & ::= & \texttt{(rule} term term cost?\texttt{)} \\
+  theory & ::= & \texttt{:theory} [\texttt{A} $\mid$ \texttt{C} $\mid$ \texttt{AC}]
+  \end{tabular}
+\end{grammar}
+
+NAT and IDENTIFIER retain the same meaning as in \Cref{chap:TRS}.
+
+Function symbols can be declared in one of the following ways:
+
+\begin{itemize}
+  \item \texttt{(fun f n :theory t)}, where \texttt{n} is the arity of \texttt{f} and \texttt{t} is associativity (\texttt{A}), commutativity (\texttt{C}) or associativity and commutativity (\texttt{AC}).
+  \item \texttt{(fun f n)}, where \texttt{n} is the arity of \texttt{f}, in this case, no equational theory is associated with \texttt{f}.
+\end{itemize}
+
+Identifiers that are not declared as function symbols are variables.
+
+\subsection{Restrictions}
+
+Terms and rules must additionally satisfy the following well-formedness conditions.
+\begin{enumerate}
+    \item Every function symbol is declared exactly once.
+    \item Function symbols are always used with their declared arity.
+    \item Theory can only be \texttt{A} (associativity), \texttt{C} (commutativity) or \texttt{AC} (associativity and commutativity).
+    \item Function symbols associated with an equational theory must have arity $2$.
+    \item Left-hand side of rules cannot be variable terms.
+    \item No extra variables allowed in rules.
+\end{enumerate}
+
+\section{Semantics}
+
+The set of equations $E$ is determined by the theory annotations of the function symbols.
+For every function symbol $f$ declared with
+\begin{itemize}
+  \item \texttt{:theory A}, $E$ contains $f(f(x,y),z) = f(x,f(y,z))$ (associativity),
+  \item \texttt{:theory C}, $E$ contains $f(x,y) = f(y,x)$ (commutativity), and
+  \item \texttt{:theory AC}, $E$ contains both of these equations.
+\end{itemize}
+$E$ contains no further equations, i.e., function symbols without a theory annotation do not contribute to $E$.
+
+Given an ETRS ${\cal R}=({\cal F},E,R)$, 
+the \emph{rewriting modulo $E$} relation, written $\to_{{\cal R}/E}$ is defined as the composition of the congruence $=_E$ induced by the set of equations $E$ and the one-step rewriting relation induced by the rules in $R$, i.e., $s\to_{{\cal R}/E}t$ if there is $s'$ such that $s=_Es'$, and then $s'\to_{R}t'$ for some term $t'$ such that $t'=_E t$.
+
+\begin{example}
+The following rules provide a well-known definition of addition of natural numbers in Peano's notation:
+\begin{eqnarray}
+0 + n & \to & n\label{ExAddition_rule1}
+\\
+s(m) + n & \to & s(m + n)
+\end{eqnarray}
+%
+However, an expression like $m+0$ is irreducible using these rules.
+%
+If \emph{commutativity} of the addition is introduced through the equation
+\begin{eqnarray}
+x + y & = & y+x
+\end{eqnarray}
+and we consider $E$ consisting of this equation, we obtain the following:
+\[m  + 0 =_E 0 + m \to_{(\ref{ExAddition_rule1})} m\]
+That is, $m+0\to_{{\cal R}/E}m$ holds, as desired.
+\end{example}
+%
+Termination of rewriting modulo is defined as follows.
+
+\begin{definition}
+An ETRS ${\cal R}=({\cal F},E,R)$ is $E$-terminating if $\to_{{\cal R}/E}$ is terminating, i.e., there is no infinite sequence $t\to_{{\cal R}/E}t'\to_{{\cal R}/E}\cdots$.
+\end{definition}
+
+
+\section{Competition Categories}
+
+The ETRS formalism is used by the following category.
+
+\subsection{Equational Termination}
+
+The Equational Termination category is concerned with the question 
+``Will every sequence of rewriting modulo steps eventually stop?''. 
+
+\begin{motivation}
+Given an ETRS $({{\cal F},E,R})$, it is often possible to simulate rewriting modulo computations with $\to_{{\cal R}/E}$ as rewritings with $\to_{{\cal R}_E}$ for a TRS ${\cal R}_E=({\cal F},R_E)$, where $R_E$ is obtained from $R$  by adding to $R$ equations $s=t$ in $E$ as rules $s\to t$ and $t\to s$.
+%
+However, ${\cal R}_E$ will \emph{never} be terminating in this way. In contrast, ${\cal R}$ can be $E$-terminating. For instance, the ETRS ${\cal R}$ above, with the  equation expressing commutativity of addition, is $E$-terminating. 
+\end{motivation}
+
+\begin{formalproblem}
+  {Equational Termination}
+  {ETRS $\Rules$}
+  {Is ${\cal R}$ $E$-terminating?}
+  {See \hyperref[scoring_termination]{Termination Scoring}}
+\end{formalproblem}
+
+\begin{example}
+The ETRS $\mathcal{R} = \{plus(x,0) \rightarrow x, plus(s(x), y) \rightarrow s(plus(x,y)),$ $times(x,0) \rightarrow 0, times(s(x),y) \rightarrow plus(times(x,y),y), times(x,plus(y,z)) \rightarrow plus(times(x,y),times(x,z))\}$, where $plus$ and $times$ are AC-symbols:
+
+\begin{center}
+\begin{tabular}{l}
+\texttt{(format ETRS)} \\
+\texttt{(fun plus 2 :theory AC)} \\
+\texttt{(fun |0| 0)} \\
+\texttt{(fun s 1)} \\
+\texttt{(fun times 2 :theory AC)} \\
+\texttt{(rule (plus x |0|) x)} \\
+\texttt{(rule (plus (s x) y) (s (plus x y)))} \\
+\texttt{(rule (times x |0|) |0|)}\\
+\texttt{(rule (times (s x) y) (plus (times x y) y))}\\
+\texttt{(rule (times x (plus y z)) (plus (times x y) (times x z)))}
+\end{tabular}
+\end{center}
+\end{example}
+
+
+

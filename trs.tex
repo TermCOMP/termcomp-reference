@@ -3,8 +3,8 @@
 
 \section{Introduction}
 
-This chapter describes the syntax and semantics for first-order \emph{Term Rewrite Systems} (TRSs).
-TRSs are the basic formalism behind several categories of the Termination Competition.
+This chapter describes the syntax and semantics for first-order \emph{Term Rewrite Systems} (TRSs)~\cite{baader1998TermRewriting,terese2003TermRewritingSystems}.
+TRSs are the basic formalism behind several categories of the Termination Competition~\cite{giesl2019TerminationComplexityCompetition}.
 In\comment{FF We also have categories for parallel rewriting...} particular, the categories \emph{TRS Standard}, \emph{TRS Innermost}, \emph{TRS Outermost}, \emph{TRS Relative}, 
 \emph{TRS Derivational Complexity}, \emph{TRS Innermost Derivational Complexity}, \emph{TRS Runtime Complexity}, 
 and \emph{TRS Innermost Runtime Complexity} all use the same underlying notion of first-order rewriting 
@@ -34,7 +34,7 @@ Identifiers that are not declared as function symbols are variables.
 The optional cost annotation is part of the general TRS format, 
 but it is currently only relevant for relative rewriting.
 
-\textbf{Example.}\comment{FF Shouldn't we use a proper environment for examples?}
+\begin{example}
 The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{a}\}$ has the following input syntax:
 \begin{center}
 \begin{tabular}{l}
@@ -44,6 +44,7 @@ The TRS $\mathcal{R} = \{\mathsf{f}(x) \to \mathsf{a}\}$ has the following input
 \texttt{(rule (f x) a)}
 \end{tabular}
 \end{center}
+\end{example}
 
 \subsection{Restrictions}
 
@@ -149,7 +150,7 @@ the \emph{relative rewrite relation} $\to_{\Rules/\mathcal{S}}$ is defined by
 \[
   \to_{\Rules/\mathcal{S}} \;=\; \to_{\mathcal{S}}^* \cdot \to_{\Rules} \cdot \to_{\mathcal{S}}^* .
 \]
-The pair $\Rules/\mathcal{S}$ is \emph{relatively terminating} if $\to_{\Rules/\mathcal{S}}$ is well founded.
+The pair $\Rules/\mathcal{S}$ is \emph{relatively terminating}~\cite{geser1990RelativeTermination} if $\to_{\Rules/\mathcal{S}}$ is well founded.
 For example, let
 \[
   \Rules = \{\mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y))\}
@@ -166,7 +167,7 @@ where strict rules of $\mathcal{R}$ have cost $1$ and weak rules of $\mathcal{S}
 
 \section{Complexity Measures}
 
-There are two standard notions of complexity for term rewriting: \emph{derivational complexity} and \emph{runtime complexity}.
+There are two standard notions of complexity for term rewriting: \emph{derivational complexity}~\cite{hofbauer1989TerminationProofsLength} and \emph{runtime complexity}~\cite{hirokawa2008AutomatedComplexityAnalysis}.
 For any set $M \subseteq \N$, we write $\sup M$ for its least upper bound, with the convention $\sup \emptyset = 0$.
 For a rewrite relation ${\to} \subseteq \mathcal{T}(\F,\V) \times \mathcal{T}(\F,\V)$, 
 the \emph{derivation height} of a term $t$ w.r.t.\ $\to$ is
@@ -251,11 +252,12 @@ In other words, does every computation defined by the rewrite rules eventually r
   {See \hyperref[scoring_termination]{Termination Scoring}}
 \end{formalproblem}
 
-\textbf{Motivation.}\comment{FF We should also use a proper environment for ``Motivation''.}
+\begin{motivation}
 This is the basic termination problem for unrestricted first-order rewriting.
 Many other rewriting categories are refinements or extensions of this setting, so it serves as a common baseline for termination techniques.
+\end{motivation}
 
-\textbf{Example.}
+\begin{example}
 The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y))\}$
 has the following input syntax:
 \begin{center}
@@ -282,6 +284,7 @@ has the following input syntax:
 \end{tabular}
 \end{center}
 Starting from $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z})$, the second rule increases the first argument forever, so the best output would be \texttt{NO}.
+\end{example}
 
 \subsection{TRS Relative}
 
@@ -296,11 +299,12 @@ In other words, if every rule has a cost which is either 0 or 1, then does every
   {See \hyperref[scoring_termination]{Termination Scoring}}
 \end{formalproblem}
 
-\textbf{Motivation.}
+\begin{motivation}
 Relative termination isolates the rules whose usage should be finite while allowing auxiliary rules to be used freely in between.
-Relative termination is needed in many termination and complexity analysis techniques.\comment{FF Reference(s)?}
+Relative termination is needed in many termination and complexity analysis techniques, e.g., in the dependency pair method~\cite{arts2000TerminationTermRewriting,giesl2006MechanizingImprovingDependency} and in modular complexity analysis~\cite{zankl2014ModularComplexityAnalysis}.
+\end{motivation}
 
-\textbf{Example.}
+\begin{example}
 The relative TRS $\mathcal{R}/\mathcal{S}$ with strict part 
 $\mathcal{R} = \{\mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{plus}(x,\mathsf{s}(y))\}$ 
 and weak part $\mathcal{S} = \{\mathsf{plus}(\mathsf{z}, y) \to y\}$ has the following input syntax:
@@ -333,6 +337,7 @@ Starting from $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z})$,
 a strict step yields $\mathsf{plus}(\mathsf{z},\mathsf{s}(\mathsf{z}))$, 
 the weak rule rebuilds $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(\mathsf{z}))$, 
 and this pattern can go on forever with infinitely many strict steps, so the best output would be \texttt{NO}.
+\end{example}
 
 \subsection{TRS Innermost}
 
@@ -347,13 +352,14 @@ In other words, does every computation that only evaluates innermost redexes eve
   {See \hyperref[scoring_termination]{Termination Scoring}}
 \end{formalproblem}
 
-\textbf{Motivation.}
+\begin{motivation}
 This category studies termination under an innermost evaluation strategy, 
 which closely corresponds to call-by-value evaluation.
 Since many programming languages evaluate arguments before calling a function, 
 innermost termination is an important evaluation strategy in real world programs.
+\end{motivation}
 
-\textbf{Example.}
+\begin{example}
 The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; 
 \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{plus}(x,\mathsf{s}(y))\}$ has the following input syntax:
 \begin{center}
@@ -381,6 +387,7 @@ The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\;
 \end{center}
 Here $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{z})$ rewrites by an innermost root step to 
 $\mathsf{plus}(\mathsf{s}(\mathsf{z}),\mathsf{s}(\mathsf{z}))$ and can continue forever, so the best output would be \texttt{NO}.
+\end{example}
 
 \subsection{TRS Outermost}
 
@@ -394,13 +401,14 @@ In other words, does every computation that only evaluates outermost redexes eve
   {See \hyperref[scoring_termination]{Termination Scoring}}
 \end{formalproblem}
 
-\textbf{Motivation.}
+\begin{motivation}
 This category studies termination under an outermost evaluation strategy, 
 which is closely related to call-by-name or lazy evaluation.
 Although more restrictive than full rewriting, this strategy is important for languages 
-and semantics that evaluate the outermost call first, e.g., \textsf{Haskell}.
+and semantics that evaluate the outermost call first, e.g., \textsf{Haskell}~\cite{hudak1992ReportProgrammingLanguage}.
+\end{motivation}
 
-\textbf{Example.}
+\begin{example}
 The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; 
 \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y))\}$ has the following input syntax:
 \begin{center}
@@ -427,6 +435,7 @@ The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to \mathsf{plus}(\mathsf{
 \end{tabular}
 \end{center}
 Starting from $\mathsf{plus}(\mathsf{z},\mathsf{z})$, the outermost redex rewrites to itself immediately, so the best output would be \texttt{NO}.
+\end{example}
 
 \subsection{TRS Derivational Complexity}
 
@@ -443,13 +452,14 @@ Hence, these results are already covered by the termination categories.
   {See \hyperref[scoring_complexity]{Complexity Scoring}, but without \texttt{INF} as possible lower bound and \texttt{FINITE} as possible upper bound.}
 \end{formalproblem}
 
-\textbf{Motivation.}
+\begin{motivation}
 Not only termination, but runtime is of equal importance for efficient and reliable software.
 So instead of checking whether rewriting terminates,
 this category focuses on how long rewrite sequences can become as a function of the input size.
 It measures the worst-case asymptotic complexity of unrestricted rewriting on arbitrary start terms.
+\end{motivation}
 
-\textbf{Example.}
+\begin{example}
 The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; 
 \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y))\}$ has the following input syntax:
 \begin{center}
@@ -470,6 +480,7 @@ and $M(t) \leq |t|^2$ for every term $t$. For a matching lower bound,
 define $t_0 = \mathsf{z}$ and $t_{n+1} = \mathsf{plus}(\mathsf{s}(t_n),\mathsf{z})$. 
 Then $|t_n| = 3n+1$, while reducing $t_n$ to normal form takes $1 + 2 + \cdots + n = \Theta(n^2)$ steps. 
 Hence, the best output would be \texttt{WORST\_CASE(Omega(n\^{}2),O(n\^{}2))}.
+\end{example}
 
 \subsection{TRS Innermost Derivational Complexity}
 
@@ -480,12 +491,13 @@ Hence, the best output would be \texttt{WORST\_CASE(Omega(n\^{}2),O(n\^{}2))}.
   {See \hyperref[scoring_complexity]{Complexity Scoring}, but without \texttt{INF} as possible lower bound and \texttt{FINITE} as possible upper bound.}
 \end{formalproblem}
 
-\textbf{Motivation.}
+\begin{motivation}
 This category measures the asymptotic complexity of a TRS 
 when only innermost rewrite sequences are considered.
 It is especially relevant when the intended execution model follows call-by-value evaluation.
+\end{motivation}
 
-\textbf{Example.}
+\begin{example}
 The same TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; 
 \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y))\}$ has the following input syntax:
 \begin{center}
@@ -503,6 +515,7 @@ and for the family $t_0 = \mathsf{z}$ and $t_{n+1} = \mathsf{plus}(\mathsf{s}(t_
 every reduction is forced to evaluate the nested first argument before the outer call can finish. 
 Thus, the innermost derivation height of $t_n$ is again $\Theta(n^2)$, 
 and the best output would be \texttt{WORST\_CASE(Omega(n\^{}2),O(n\^{}2))}.
+\end{example}
 
 \subsection{TRS Runtime Complexity}
 
@@ -513,14 +526,15 @@ and the best output would be \texttt{WORST\_CASE(Omega(n\^{}2),O(n\^{}2))}.
   {See \hyperref[scoring_complexity]{Complexity Scoring}, but without \texttt{INF} as possible lower bound and \texttt{FINITE} as possible upper bound.}
 \end{formalproblem}
 
-\textbf{Motivation.}
+\begin{motivation}
 Runtime complexity focuses on terms that represent 
 an algorithm applied to some input data that are not executable functions themselves.
 From the viewpoint of program analysis, 
 this better matches the usual notion of program runtime 
 than derivational complexity on arbitrary terms.
+\end{motivation}
 
-\textbf{Example.}
+\begin{example}
 The TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y)),
 \linebreak \mathsf{double}(x) \to \mathsf{plus}(x,x)\}$ has the following input syntax:
 \begin{center}
@@ -540,6 +554,7 @@ there is one call to $\mathsf{double}$ followed by a linear addition,
 so the runtime complexity has class $\mathrm{Pol}_1$, and the best output would be \texttt{WORST\_CASE(Omega(n),O(n))}. 
 This illustrates the difference to derivational complexity: nested terms like 
 $\mathsf{double}(\mathsf{double}(\mathsf{s}^n(\mathsf{z})))$ are not basic and are therefore ignored in this category.
+\end{example}
 
 \subsection{TRS Innermost Runtime Complexity}
 
@@ -550,13 +565,14 @@ $\mathsf{double}(\mathsf{double}(\mathsf{s}^n(\mathsf{z})))$ are not basic and a
   {See \hyperref[scoring_complexity]{Complexity Scoring}, but without \texttt{INF} as possible lower bound and \texttt{FINITE} as possible upper bound.}
 \end{formalproblem}
 
-\textbf{Motivation.}
+\begin{motivation}
 This category combines the restriction to basic start terms (algorithms applied on data)
 with the restriction to innermost rewriting (call-by-value evaluation).
 It captures the usual notion of program runtime for programming languages
 that follow a call-by-value evaluation.
+\end{motivation}
 
-\textbf{Example.}
+\begin{example}
 The same TRS $\mathcal{R} = \{\mathsf{plus}(\mathsf{z}, y) \to y,\; \mathsf{plus}(\mathsf{s}(x), y) \to \mathsf{s}(\mathsf{plus}(x,y)),
 \linebreak \mathsf{double}(x) \to \mathsf{plus}(x,x)\}$ has the following input syntax:
 \begin{center}
@@ -575,3 +591,4 @@ On basic terms such as $\mathsf{double}(\mathsf{s}^n(\mathsf{z}))$, the unique i
 and then evaluates the resulting addition in linearly many steps, so the best output would be \texttt{WORST\_CASE(Omega(n),O(n))}. 
 Again, the category ignores non-basic nested calls such as $\mathsf{double}(\mathsf{double}(\mathsf{s}^n(\mathsf{z})))$, 
 which is why the runtime measure differs from derivational complexity.
+\end{example}

@@ -23,14 +23,14 @@ Probabilistic term rewrite systems have the following syntax.
   fun & ::= & \texttt{(fun} IDENTIFIER NAT\texttt{)} \\
   term & ::= & IDENTIFIER $|$ \texttt{(}IDENTIFIER term+\texttt{)} \\
   prule & ::= & \texttt{(prule} term dist\texttt{)} \\
-  dist & ::= & \texttt{((} outcome+\texttt{))} \\
+  dist & ::= & \texttt{(}outcome+\texttt{)} \\
   outcome & ::= & \texttt{(}term prob?\texttt{)} \\
-  prob & ::= & \texttt{:prob} NAT \\
+  prob & ::= & \texttt{:prob} POSNAT \\
   \end{tabular}
 \end{grammar}
 
 \bigskip
-Additionally, we have NAT $\in \mathbb{N}$, and IDENTIFIER are intended to be valid SMT-LIB symbols.
+Additionally, we have NAT $\in \mathbb{N}$, POSNAT $\in \mathbb{N} \setminus \{0\}$, and IDENTIFIER are intended to be valid SMT-LIB symbols.
 As in the TRS format, quoted and unquoted identifiers should not be mixed, and reserved words such as
 \texttt{fun}, \texttt{prule}, and \texttt{format} must not be used as identifiers.
 Function symbols are declared by \texttt{(fun f n)}, where \texttt{n} is the arity of \texttt{f}.
@@ -43,7 +43,7 @@ The actual branch probabilities are obtained by normalizing all weights of the r
 For example, the outcomes \texttt{((a :prob 2) (b :prob 1))} represent the distribution
 $\{\nicefrac{2}{3}:\mathsf{a},\nicefrac{1}{3}:\mathsf{b}\}$.
 
-\textbf{Example.}
+\begin{example}
 The PTRS $\mathcal{P} = \{\mathsf{f} \to \{\nicefrac{1}{2}:\mathsf{f},\; \nicefrac{1}{2}:\mathsf{stop}\}\}$
 has the following input syntax:
 \begin{center}
@@ -54,6 +54,7 @@ has the following input syntax:
 \texttt{(prule f ((f :prob 1) (stop :prob 1)))}
 \end{tabular}
 \end{center}
+\end{example}
 
 \section{Semantics}
 
@@ -61,7 +62,7 @@ More details about the following definitions and results can be found in \cite{a
 Function symbols, terms, substitutions, positions, subterms, and contexts are defined exactly as for ordinary TRSs, see \Cref{chap:TRS}.
 
 A \emph{finite multi-distribution} on a set $A$ is a multiset
-$\mu = \{p_1:a_1,\ldots,p_m:a_m\}$ where every $0 \leq p_i < 1$,
+$\mu = \{p_1:a_1,\ldots,p_m:a_m\}$ where every $0 < p_i \leq 1$,
 every $a_i \in A$, and $\sum_{i=1}^m p_i = 1$.
 The set of all finite multi-distributions on $A$ is denoted $\mathit{FDist}(A)$.
 For example, $\{\nicefrac{1}{2}:\mathsf{f},\nicefrac{1}{2}:\mathsf{stop}\}$ is a finite multi-distribution on
@@ -187,16 +188,24 @@ In other words, the category asks for proofs of AST or of the stronger property 
     &g \in \{\texttt{?} < \texttt{AST} < \texttt{SAST}\}
   \end{align*}
   and where $f$ is the lower bound and $g$ is the upper bound.
+
+  The conflicting results are:
+  \begin{itemize}
+  \item \texttt{Non-SAST} and \texttt{SAST}
+  \item \texttt{Non-AST} and \texttt{SAST}
+  \item \texttt{Non-AST} and \texttt{AST}
+  \end{itemize}
 \end{formalproblem}
 
-\textbf{Motivation.}
+\begin{motivation}
 This category captures probabilistic termination without fixing an evaluation strategy.
 It is the natural analogue of unrestricted rewriting for probabilistic programs,
 where each rewrite step may branch into several successor states with different probabilities.
 Probabilistic programming is used to deal with uncertainty in data and
 has applications in many areas such as machine learning and Bayesian inference \cite{Gordon14}.
+\end{motivation}
 
-\textbf{Example.}
+\begin{example}
 The PTRS $\mathcal{P} = \{\mathsf{g}(x) \to \{\nicefrac{1}{2}:\mathsf{g}(\mathsf{g}(x)),\; \nicefrac{1}{2}:x\}\}$
 has the following input syntax:
 \begin{center}
@@ -239,6 +248,7 @@ This random walk is biased towards larger terms and is not AST.
 Therefore, neither AST nor SAST can be certified,
 so the best output would be \texttt{WORST\_CASE(Non-AST,?)},
 and the other possible outputs for this PTRS are \texttt{WORST\_CASE(Non-SAST,?)} and \texttt{WORST\_CASE(?,?)}.
+\end{example}
 
 \subsection{PTRS Innermost}
 
@@ -256,14 +266,22 @@ and whether every start term has a finite upper bound on the expected runtime of
     &g \in \{\texttt{?} < \texttt{AST} < \texttt{SAST}\}
   \end{align*}
   and where $f$ is the lower bound and $g$ is the upper bound.
+
+  The conflicting results are:
+  \begin{itemize}
+  \item \texttt{Non-SAST} and \texttt{SAST}
+  \item \texttt{Non-AST} and \texttt{SAST}
+  \item \texttt{Non-AST} and \texttt{AST}
+  \end{itemize}
 \end{formalproblem}
 
-\textbf{Motivation.}
+\begin{motivation}
 This category studies probabilistic rewriting under a call-by-value style strategy.
 Innermost rewriting is particularly relevant for probabilistic programming languages and interpreters
 that evaluate arguments before applying a rule at the root.
+\end{motivation}
 
-\textbf{Example.}
+\begin{example}
 The PTRS $\mathcal{P} = \{\mathsf{g}(x) \to \{\nicefrac{1}{2}:\mathsf{g}(\mathsf{g}(x)),\; \nicefrac{1}{2}:x\}\}$
 has the following input syntax:
 \begin{center}
@@ -302,3 +320,4 @@ has the following input syntax:
 Here innermost rewriting also coincides with full rewriting.
 This random walk is biased towards larger terms and is therefore not innermost AST.
 Hence, the best output would be \texttt{WORST\_CASE(Non-AST,?)}.
+\end{example}
